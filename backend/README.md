@@ -22,6 +22,22 @@ cd backend
 pip install -r requirements.txt
 ```
 
+## 启动本地 HTTP 服务
+
+```powershell
+cd backend
+python http_server.py
+```
+
+默认地址：`http://127.0.0.1:8000`
+
+主要接口：
+- `POST /api/ping`
+- `GET /api/runtime-info`
+- `POST /api/outline`
+
+该服务直接复用现有 outline 生成链路，适用于前端本地开发与联调。
+
 ## 配置 API Key
 
 ```powershell
