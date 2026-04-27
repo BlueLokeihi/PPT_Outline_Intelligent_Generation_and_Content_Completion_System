@@ -6,6 +6,21 @@
 
 运行约定：Python 执行前请先进入本目录。
 
+## 环境基线（可复现）
+
+- Python：3.12.7
+- 依赖：见 requirements.txt（精确锁定版本，便于同学复现）
+
+推荐在新机器按以下方式创建环境并安装：
+
+```powershell
+conda create -n pptoutline python=3.12.7 -y
+conda activate pptoutline
+cd backend
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
 ## 目录结构
 - config/models.json：模型配置（base_url/model/api_key_env 等）
 - llm/：大模型调用封装（集中在一个文件：llm/client.py）
