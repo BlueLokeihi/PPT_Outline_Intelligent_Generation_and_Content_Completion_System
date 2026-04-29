@@ -4,6 +4,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, List, Literal
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -14,9 +15,18 @@ from outline.generator import generate_once
 from outline.io_utils import maybe_truncate
 from outline.prompt_strategies import PromptOptions, build_messages
 
+# 加载 .env 文件中的环境变量
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BACKEND_ROOT = PROJECT_ROOT / "backend"
 MODELS_CONFIG = BACKEND_ROOT / "config" / "models.json"
+ENV_FILE = BACKEND_ROOT / ".env"
+
+# 自动加载 .env 文件
+if ENV_FILE.exists():
+    load_dotenv(ENV_FILE)
+    print(f"✓ 已加载环境变量配置: {ENV_FILE}")
+else:
+    print(f"⚠ 未找到 .env 文件: {ENV_FILE}")
 
 
 class MessageItem(BaseModel):
