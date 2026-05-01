@@ -1,0 +1,1270 @@
+{
+  "outline_title": "PPT 大纲生成策略实验汇报",
+  "corpus": "demo",
+  "mode": "hybrid",
+  "embedding_model": "text-embedding-v3",
+  "rewrite_provider": "qwen",
+  "rewrite_model": "qwen-plus",
+  "results": [
+    {
+      "chapter_idx": 0,
+      "page_idx": 0,
+      "chapter_title": "Schema 约束与结构化输出",
+      "page_title": "Schema On 的工程可靠性",
+      "rounds": [
+        {
+          "round": 1,
+          "queries": [
+            "JSON Schema校验降低解析失败率数据",
+            "DeepSeek与Qwen Schema On性能对比",
+            "强制结构化提升生成稳定性幅度"
+          ],
+          "intent_tags": [
+            "数据",
+            "对比",
+            "数据"
+          ],
+          "coverage": 0.7244,
+          "per_query_hits": {
+            "JSON Schema校验降低解析失败率数据": [
+              {
+                "score": 0.0325,
+                "vector_score": 0.6264292001724243,
+                "bm25_score": 3.1987816528885564,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 2,
+                "snippet": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tong"
+              },
+              {
+                "score": 0.0325,
+                "vector_score": 0.6552814245223999,
+                "bm25_score": 3.1533575635020603,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 34,
+                "snippet": "orcing format compliance.\n\n7.1 Engineering Reliability: A Decisive Improvement\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0312,
+                "vector_score": 0.6115654706954956,
+                "bm25_score": 2.491556751045347,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 13,
+                "snippet": "On across all prompt strategies reveals three\nconsistent, independent effects.\n\n4.1 Computational Acceleration\nEnabling "
+              },
+              {
+                "score": 0.0308,
+                "vector_score": 0.612163782119751,
+                "bm25_score": 2.168538630410951,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 41,
+                "snippet": "es\nchapter, such as the carbon emissions equivalence of a single training run.\n\nIn summary, Schema On functions as more "
+              },
+              {
+                "score": 0.0308,
+                "vector_score": 0.6102185845375061,
+                "bm25_score": 2.365295167194805,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 14,
+                "snippet": "most effective lever for reducing generation latency in a production context.\n\n4.2 Increased Information Density\nUnder S"
+              },
+              {
+                "score": 0.0294,
+                "vector_score": 0.5854284167289734,
+                "bm25_score": 1.2379688666395319,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 46,
+                "snippet": "M (3rd): Underperforms without schema constraints due to format parsing errors.\nBecomes usable with Schema On, but remai"
+              }
+            ],
+            "DeepSeek与Qwen Schema On性能对比": [
+              {
+                "score": 0.0325,
+                "vector_score": 0.7460602521896362,
+                "bm25_score": 4.488590277923429,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 2,
+                "snippet": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tong"
+              },
+              {
+                "score": 0.0325,
+                "vector_score": 0.7243882417678833,
+                "bm25_score": 4.915126835220511,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 47,
+                "snippet": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on "
+              },
+              {
+                "score": 0.0317,
+                "vector_score": 0.7155396938323975,
+                "bm25_score": 4.006075190264048,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 23,
+                "snippet": "chema\nOn combination should be avoided in constrained production environments.\n\n6. Cross-Model Comparison (Schema Off)\nA"
+              },
+              {
+                "score": 0.031,
+                "vector_score": 0.6422503590583801,
+                "bm25_score": 3.0031647038111817,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 39,
+                "snippet": "rong\n— they represent different strengths made more legible by the constraint.\n\n7.3 Structural Rigor and Logical Depth\nS"
+              },
+              {
+                "score": 0.0303,
+                "vector_score": 0.6361386179924011,
+                "bm25_score": 2.7364321764695796,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 3,
+                "snippet": "• Model Comparison: DeepSeek, Qwen (Tongyi Qianwen), and GLM (Zhipu Qingyan).\n\nAll experiments used the DeepSeek model f"
+              },
+              {
+                "score": 0.0297,
+                "vector_score": 0.5656021237373352,
+                "bm25_score": 3.655428873279094,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 48,
+                "snippet": "Qwen.\n• Teaching or course material: Qwen with Schema On, any prompt strategy.\n\nPPT Outline Generation Strategy — Experi"
+              }
+            ],
+            "强制结构化提升生成稳定性幅度": [
+              {
+                "score": 0.0164,
+                "vector_score": 0.6203962564468384,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 16,
+                "snippet": "n forced to commit to a rigid schema. This is a double-edged effect: it unlocks\nricher structural variety but also expos"
+              },
+              {
+                "score": 0.0161,
+                "vector_score": 0.595789909362793,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 43,
+                "snippet": "avoid Baseline in constrained environments to prevent\nmacrostructure collapse.\n3. Generation speed, logical depth, and c"
+              },
+              {
+                "score": 0.0159,
+                "vector_score": 0.5743468403816223,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 35,
+                "snippet": "r counts, quality metrics\n— is consistently accessible to downstream programs.\n\n7.2 Content Granularity Shifts\nEnabling "
+              },
+              {
+                "score": 0.0156,
+                "vector_score": 0.5720800161361694,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 15,
+                "snippet": "etely to satisfy the\nformat's integrity requirements, producing denser slides.\n\n4.3 Breaking the \"Default Safety Templat"
+              },
+              {
+                "score": 0.0154,
+                "vector_score": 0.56836998462677,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 42,
+                "snippet": "chnical and precisely classified language.\n\n8. Conclusions and Recommendations\n\n8.1 Key Findings\n1. Constraints accelera"
+              },
+              {
+                "score": 0.0152,
+                "vector_score": 0.5669553279876709,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 14,
+                "snippet": "most effective lever for reducing generation latency in a production context.\n\n4.2 Increased Information Density\nUnder S"
+              }
+            ]
+          }
+        }
+      ],
+      "final_chunks": [
+        {
+          "score": 0.0325,
+          "vector_score": 0.6264292001724243,
+          "bm25_score": 3.1987816528885564,
+          "vector_rank": 2,
+          "bm25_rank": 1,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 2,
+          "char_start": 585,
+          "char_end": 744,
+          "text": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tongyi Qianwen), and GLM (Zhipu Qingyan)."
+        },
+        {
+          "score": 0.0325,
+          "vector_score": 0.6552814245223999,
+          "bm25_score": 3.1533575635020603,
+          "vector_rank": 1,
+          "bm25_rank": 2,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 34,
+          "char_start": 10242,
+          "char_end": 10810,
+          "text": "orcing format compliance.\n\n7.1 Engineering Reliability: A Decisive Improvement\n\nPPT Outline Generation Strategy — Experimental Report  |  Page 6\nThe most dramatic change is the resolution of GLM's JSON validity problem. In Schema Off\nmode, GLM's output failed to parse entirely. In Schema On mode, it successfully generated fully\ncompliant JSON, with metadata validation confirming schema_ok: true. Across all three models,\nSchema On ensures that structured metadata — page counts, chapter counts, quality metrics\n— is consistently accessible to downstream programs."
+        },
+        {
+          "score": 0.0325,
+          "vector_score": 0.7243882417678833,
+          "bm25_score": 4.915126835220511,
+          "vector_rank": 2,
+          "bm25_rank": 1,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 47,
+          "char_start": 14229,
+          "char_end": 14736,
+          "text": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on the full experimental analysis, the following configurations are recommended for\nspecific use cases:\n\n• Production environment (speed + format stability required): Few-Shot + Schema On\nusing DeepSeek.\n• Academic or analytical deliverable (depth + density required): CoT Silent + Schema On\nusing DeepSeek or Qwen.\n• Teaching or course material: Qwen with Schema On, any prompt strategy."
+        },
+        {
+          "score": 0.0317,
+          "vector_score": 0.7155396938323975,
+          "bm25_score": 4.006075190264048,
+          "vector_rank": 3,
+          "bm25_rank": 3,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 23,
+          "char_start": 6879,
+          "char_end": 7194,
+          "text": "chema\nOn combination should be avoided in constrained production environments.\n\n6. Cross-Model Comparison (Schema Off)\nA parallel study compared DeepSeek, Qwen, and GLM on the same PPT outline task to assess\ndifferences in engineering reliability, structural design, logical coherence, and pagination\ngranularity."
+        },
+        {
+          "score": 0.0312,
+          "vector_score": 0.6115654706954956,
+          "bm25_score": 2.491556751045347,
+          "vector_rank": 4,
+          "bm25_rank": 4,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 13,
+          "char_start": 3803,
+          "char_end": 4264,
+          "text": "On across all prompt strategies reveals three\nconsistent, independent effects.\n\n4.1 Computational Acceleration\nEnabling Schema reduces generation time by 15–25% across all prompt strategies. The strict\nattribute-value structure of the JSON format narrows the model's output search space,\neliminating the overhead of exploratory free-form formatting. This makes Schema On the single\nmost effective lever for reducing generation latency in a production context."
+        },
+        {
+          "score": 0.031,
+          "vector_score": 0.6422503590583801,
+          "bm25_score": 3.0031647038111817,
+          "vector_rank": 4,
+          "bm25_rank": 5,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 39,
+          "char_start": 11608,
+          "char_end": 12150,
+          "text": "rong\n— they represent different strengths made more legible by the constraint.\n\n7.3 Structural Rigor and Logical Depth\nSchema On also raises the analytical quality of content across the board:\n• DeepSeek adds a dedicated page on the \"AI Capability Evolution Path\" (perceptual\nintelligence → cognitive → generative → decision-making) and explicitly addresses\nexplainable AI (XAI) and alignment in its future section — creating a more closed-loop\nlogical arc.\n• Qwen fills in previously missing coverage of the 1990s–2000s (SVM, Random Forest,"
+        }
+      ],
+      "error": ""
+    },
+    {
+      "chapter_idx": 0,
+      "page_idx": 1,
+      "chapter_title": "Schema 约束与结构化输出",
+      "page_title": "Schema Off 的失败模式",
+      "rounds": [
+        {
+          "round": 1,
+          "queries": [
+            "GLM无Schema输出格式漂移案例",
+            "GLM自由生成额外字段错误类型",
+            "为什么GLM无约束输出不稳定"
+          ],
+          "intent_tags": [
+            "案例",
+            "事实",
+            "影响"
+          ],
+          "coverage": 0.7151,
+          "per_query_hits": {
+            "GLM无Schema输出格式漂移案例": [
+              {
+                "score": 0.0328,
+                "vector_score": 0.7150910496711731,
+                "bm25_score": 2.4421676748981147,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 25,
+                "snippet": "exception. This highlights GLM's weakness in structured output robustness when\nschema constraints are absent."
+              },
+              {
+                "score": 0.032,
+                "vector_score": 0.6477910876274109,
+                "bm25_score": 2.3325147807679576,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 2,
+                "snippet": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tong"
+              },
+              {
+                "score": 0.032,
+                "vector_score": 0.6590421795845032,
+                "bm25_score": 2.301148245945427,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 34,
+                "snippet": "orcing format compliance.\n\n7.1 Engineering Reliability: A Decisive Improvement\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0308,
+                "vector_score": 0.5672268271446228,
+                "bm25_score": 1.6030387038294562,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 36,
+                "snippet": "ling constraints pushes each model's content density in a different direction:\n\nModel Schema Off Schema On Change Trend\n"
+              },
+              {
+                "score": 0.0306,
+                "vector_score": 0.5549499988555908,
+                "bm25_score": 1.7934553940431117,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 23,
+                "snippet": "chema\nOn combination should be avoided in constrained production environments.\n\n6. Cross-Model Comparison (Schema Off)\nA"
+              },
+              {
+                "score": 0.0299,
+                "vector_score": 0.5870130062103271,
+                "bm25_score": 1.2379688666395319,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 46,
+                "snippet": "M (3rd): Underperforms without schema constraints due to format parsing errors.\nBecomes usable with Schema On, but remai"
+              }
+            ],
+            "GLM自由生成额外字段错误类型": [
+              {
+                "score": 0.0328,
+                "vector_score": 0.6117868423461914,
+                "bm25_score": 1.350862864034202,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 25,
+                "snippet": "exception. This highlights GLM's weakness in structured output robustness when\nschema constraints are absent."
+              },
+              {
+                "score": 0.0323,
+                "vector_score": 0.559500515460968,
+                "bm25_score": 1.1237220722188508,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 2,
+                "snippet": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tong"
+              },
+              {
+                "score": 0.0317,
+                "vector_score": 0.5561580657958984,
+                "bm25_score": 1.1054866013110471,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 24,
+                "snippet": "reliability, structural design, logical coherence, and pagination\ngranularity.\n\n6.1 Engineering Reliability and Format C"
+              },
+              {
+                "score": 0.0312,
+                "vector_score": 0.5478678941726685,
+                "bm25_score": 1.1054866013110471,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 34,
+                "snippet": "orcing format compliance.\n\n7.1 Engineering Reliability: A Decisive Improvement\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0294,
+                "vector_score": 0.50117427110672,
+                "bm25_score": 0.9920335589634484,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 23,
+                "snippet": "chema\nOn combination should be avoided in constrained production environments.\n\n6. Cross-Model Comparison (Schema Off)\nA"
+              },
+              {
+                "score": 0.0291,
+                "vector_score": 0.5470575094223022,
+                "bm25_score": 0.7469396457577101,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 40,
+                "snippet": "en fills in previously missing coverage of the 1990s–2000s (SVM, Random Forest,\nBayesian Networks) and adds quantitative"
+              }
+            ],
+            "为什么GLM无约束输出不稳定": [
+              {
+                "score": 0.0328,
+                "vector_score": 0.7353876233100891,
+                "bm25_score": 1.350862864034202,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 25,
+                "snippet": "exception. This highlights GLM's weakness in structured output robustness when\nschema constraints are absent."
+              },
+              {
+                "score": 0.0318,
+                "vector_score": 0.6220996379852295,
+                "bm25_score": 1.1054866013110471,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 34,
+                "snippet": "orcing format compliance.\n\n7.1 Engineering Reliability: A Decisive Improvement\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0317,
+                "vector_score": 0.6090636849403381,
+                "bm25_score": 1.1054866013110471,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 24,
+                "snippet": "reliability, structural design, logical coherence, and pagination\ngranularity.\n\n6.1 Engineering Reliability and Format C"
+              },
+              {
+                "score": 0.0315,
+                "vector_score": 0.5513112545013428,
+                "bm25_score": 1.1237220722188508,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 2,
+                "snippet": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tong"
+              },
+              {
+                "score": 0.0294,
+                "vector_score": 0.5250475406646729,
+                "bm25_score": 0.9920335589634484,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 23,
+                "snippet": "chema\nOn combination should be avoided in constrained production environments.\n\n6. Cross-Model Comparison (Schema Off)\nA"
+              },
+              {
+                "score": 0.0289,
+                "vector_score": 0.5497169494628906,
+                "bm25_score": 0.7469396457577101,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 40,
+                "snippet": "en fills in previously missing coverage of the 1990s–2000s (SVM, Random Forest,\nBayesian Networks) and adds quantitative"
+              }
+            ]
+          }
+        }
+      ],
+      "final_chunks": [
+        {
+          "score": 0.0328,
+          "vector_score": 0.7150910496711731,
+          "bm25_score": 2.4421676748981147,
+          "vector_rank": 1,
+          "bm25_rank": 1,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 25,
+          "char_start": 7585,
+          "char_end": 7697,
+          "text": "exception. This highlights GLM's weakness in structured output robustness when\nschema constraints are absent."
+        },
+        {
+          "score": 0.0323,
+          "vector_score": 0.559500515460968,
+          "bm25_score": 1.1237220722188508,
+          "vector_rank": 2,
+          "bm25_rank": 2,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 2,
+          "char_start": 585,
+          "char_end": 744,
+          "text": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tongyi Qianwen), and GLM (Zhipu Qingyan)."
+        },
+        {
+          "score": 0.032,
+          "vector_score": 0.6590421795845032,
+          "bm25_score": 2.301148245945427,
+          "vector_rank": 2,
+          "bm25_rank": 3,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 34,
+          "char_start": 10242,
+          "char_end": 10810,
+          "text": "orcing format compliance.\n\n7.1 Engineering Reliability: A Decisive Improvement\n\nPPT Outline Generation Strategy — Experimental Report  |  Page 6\nThe most dramatic change is the resolution of GLM's JSON validity problem. In Schema Off\nmode, GLM's output failed to parse entirely. In Schema On mode, it successfully generated fully\ncompliant JSON, with metadata validation confirming schema_ok: true. Across all three models,\nSchema On ensures that structured metadata — page counts, chapter counts, quality metrics\n— is consistently accessible to downstream programs."
+        },
+        {
+          "score": 0.0317,
+          "vector_score": 0.5561580657958984,
+          "bm25_score": 1.1054866013110471,
+          "vector_rank": 3,
+          "bm25_rank": 3,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 24,
+          "char_start": 7114,
+          "char_end": 7665,
+          "text": "reliability, structural design, logical coherence, and pagination\ngranularity.\n\n6.1 Engineering Reliability and Format Compliance\n• DeepSeek & Qwen both generated complete, well-formed JSON that conformed to the\nexpected hierarchical logic and could be used directly by downstream parsing programs.\n• GLM failed to produce valid JSON due to a syntax error — double quotes inside string\nvalues were not properly escaped (e.g. proposed the \\\"Turing test\\\"), causing a parse\nexception. This highlights GLM's weakness in structured output robustness when"
+        },
+        {
+          "score": 0.0308,
+          "vector_score": 0.5672268271446228,
+          "bm25_score": 1.6030387038294562,
+          "vector_rank": 5,
+          "bm25_rank": 5,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 36,
+          "char_start": 10845,
+          "char_end": 11405,
+          "text": "ling constraints pushes each model's content density in a different direction:\n\nModel Schema Off Schema On Change Trend\nDeepSeek 14 slides / 6 chapters 11 slides / 4 chapters Streamlined: Content more\nfocused; merges fragmented\nsub-pages; tighter structure.\nQwen 11 slides / 6 chapters 16 slides / 7 chapters Elaborated: Significantly\nexpanded technical details,\nadding standalone pages for\nNLP transition and global\ncompetitive landscape.\nGLM Parse failed (~11\npages raw text)\n10 slides / 5 chapters Standardized: Transformed from\nchaotic raw text to a well-"
+        },
+        {
+          "score": 0.0306,
+          "vector_score": 0.5549499988555908,
+          "bm25_score": 1.7934553940431117,
+          "vector_rank": 7,
+          "bm25_rank": 4,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 23,
+          "char_start": 6879,
+          "char_end": 7194,
+          "text": "chema\nOn combination should be avoided in constrained production environments.\n\n6. Cross-Model Comparison (Schema Off)\nA parallel study compared DeepSeek, Qwen, and GLM on the same PPT outline task to assess\ndifferences in engineering reliability, structural design, logical coherence, and pagination\ngranularity."
+        }
+      ],
+      "error": ""
+    },
+    {
+      "chapter_idx": 1,
+      "page_idx": 0,
+      "chapter_title": "Prompt 策略横评",
+      "page_title": "Few-Shot 的效率与规范性",
+      "rounds": [
+        {
+          "round": 1,
+          "queries": [
+            "Few-Shot模板如何约束PPT页数和章节结构",
+            "Few-Shot与CoT-Silent质量分对比数据",
+            "Few-Shot加Schema为何提升确定性"
+          ],
+          "intent_tags": [
+            "方法",
+            "数据",
+            "影响"
+          ],
+          "coverage": 0.6942,
+          "per_query_hits": {
+            "Few-Shot模板如何约束PPT页数和章节结构": [
+              {
+                "score": 0.032,
+                "vector_score": 0.6055475473403931,
+                "bm25_score": 4.543325151039181,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 5,
+                "snippet": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0308,
+                "vector_score": 0.566460132598877,
+                "bm25_score": 4.208510337152462,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 18,
+                "snippet": "dditive\neffects. Instead, the interactions reveal distinct compound behaviors.\n\n5.1 Few-Shot + Schema On — Most Determin"
+              },
+              {
+                "score": 0.0308,
+                "vector_score": 0.6245238780975342,
+                "bm25_score": 2.810842814504839,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 21,
+                "snippet": "ables that prioritize logical rigor\nand granular detail over generation speed.\n\n5.3 Baseline + Schema On — Most Unstable"
+              },
+              {
+                "score": 0.0306,
+                "vector_score": 0.554606556892395,
+                "bm25_score": 4.228294297015211,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 7,
+                "snippet": "strategies exhibit meaningfully different\ncognitive and generative behaviors.\n\n3.1 Few-Shot Prompting — Efficiency and S"
+              },
+              {
+                "score": 0.0295,
+                "vector_score": 0.5402405261993408,
+                "bm25_score": 3.5619718908075404,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 1,
+                "snippet": "trategies, Schema Constraints, and Model Performance in LLM-Generated\nOutlines\n\n1. Experiment Overview\nThis report prese"
+              },
+              {
+                "score": 0.0283,
+                "vector_score": 0.5057373046875,
+                "bm25_score": 3.5874478045138685,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 4,
+                "snippet": "dependently and in combination to isolate its\nindividual and compound effects.\n\n2. Core Experimental Data\nThe table belo"
+              }
+            ],
+            "Few-Shot与CoT-Silent质量分对比数据": [
+              {
+                "score": 0.0328,
+                "vector_score": 0.6942134499549866,
+                "bm25_score": 7.779847874141377,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 5,
+                "snippet": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0313,
+                "vector_score": 0.6440809369087219,
+                "bm25_score": 4.228294297015211,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 7,
+                "snippet": "strategies exhibit meaningfully different\ncognitive and generative behaviors.\n\n3.1 Few-Shot Prompting — Efficiency and S"
+              },
+              {
+                "score": 0.0313,
+                "vector_score": 0.5975949168205261,
+                "bm25_score": 5.65382163522776,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 47,
+                "snippet": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on "
+              },
+              {
+                "score": 0.0308,
+                "vector_score": 0.5552676916122437,
+                "bm25_score": 7.531610996716686,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 4,
+                "snippet": "dependently and in combination to isolate its\nindividual and compound effects.\n\n2. Core Experimental Data\nThe table belo"
+              },
+              {
+                "score": 0.0306,
+                "vector_score": 0.6187300682067871,
+                "bm25_score": 4.208510337152462,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 18,
+                "snippet": "dditive\neffects. Instead, the interactions reveal distinct compound behaviors.\n\n5.1 Few-Shot + Schema On — Most Determin"
+              },
+              {
+                "score": 0.0301,
+                "vector_score": 0.6169180870056152,
+                "bm25_score": 2.9431761307562274,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 9,
+                "snippet": "e — the output closely mirrors the provided examples in tone and organization.\n\n3.2 CoT Silent — Logic and Depth\nChain o"
+              }
+            ],
+            "Few-Shot加Schema为何提升确定性": [
+              {
+                "score": 0.0325,
+                "vector_score": 0.6684192419052124,
+                "bm25_score": 5.370404886142474,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 7,
+                "snippet": "strategies exhibit meaningfully different\ncognitive and generative behaviors.\n\n3.1 Few-Shot Prompting — Efficiency and S"
+              },
+              {
+                "score": 0.0325,
+                "vector_score": 0.6913431882858276,
+                "bm25_score": 5.168444520506487,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 18,
+                "snippet": "dditive\neffects. Instead, the interactions reveal distinct compound behaviors.\n\n5.1 Few-Shot + Schema On — Most Determin"
+              },
+              {
+                "score": 0.0313,
+                "vector_score": 0.6070555448532104,
+                "bm25_score": 4.733377061330545,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 5,
+                "snippet": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0303,
+                "vector_score": 0.6205848455429077,
+                "bm25_score": 3.7574890781667123,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 21,
+                "snippet": "ables that prioritize logical rigor\nand granular detail over generation speed.\n\n5.3 Baseline + Schema On — Most Unstable"
+              },
+              {
+                "score": 0.0303,
+                "vector_score": 0.5961593389511108,
+                "bm25_score": 3.909959821361819,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 47,
+                "snippet": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on "
+              },
+              {
+                "score": 0.0301,
+                "vector_score": 0.5962053537368774,
+                "bm25_score": 3.8473635323895956,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 42,
+                "snippet": "chnical and precisely classified language.\n\n8. Conclusions and Recommendations\n\n8.1 Key Findings\n1. Constraints accelera"
+              }
+            ]
+          }
+        }
+      ],
+      "final_chunks": [
+        {
+          "score": 0.0328,
+          "vector_score": 0.6942134499549866,
+          "bm25_score": 7.779847874141377,
+          "vector_rank": 1,
+          "bm25_rank": 1,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 5,
+          "char_start": 1519,
+          "char_end": 2067,
+          "text": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experimental Report  |  Page 2\nGroup Prompt\nStrategy\nSchema\nConstraint\nGeneration\nTime (s)\nChapters\n(Macro)\nTotal\nPages\nAvg. Bullet\nPoints/Page\n(shortest)\n\nKey observations at a glance: Few-Shot consistently achieves the shortest generation time; CoT\nSilent + Schema On produces the highest information density (4.62 bullet points per page); and\nenabling Schema reduces generation time by approximately 15–25% across all strategies."
+        },
+        {
+          "score": 0.0325,
+          "vector_score": 0.6913431882858276,
+          "bm25_score": 5.168444520506487,
+          "vector_rank": 1,
+          "bm25_rank": 2,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 18,
+          "char_start": 5274,
+          "char_end": 5752,
+          "text": "dditive\neffects. Instead, the interactions reveal distinct compound behaviors.\n\n5.1 Few-Shot + Schema On — Most Deterministic\nFew-Shot provides a content template; Schema On provides a format lock. Together, they place\nthe model in a highly efficient \"assembly line\" mode, producing a well-structured outline in just\n43.4 seconds with stable quality. This combination is ideal for production environments with\nstrict requirements on both response speed and output consistency."
+        },
+        {
+          "score": 0.0325,
+          "vector_score": 0.6684192419052124,
+          "bm25_score": 5.370404886142474,
+          "vector_rank": 2,
+          "bm25_rank": 1,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 7,
+          "char_start": 2154,
+          "char_end": 2652,
+          "text": "strategies exhibit meaningfully different\ncognitive and generative behaviors.\n\n3.1 Few-Shot Prompting — Efficiency and Specification\nFew-Shot consistently delivers the shortest generation time across both schema conditions\n(49.6s with Schema Off; 43.4s with Schema On). Providing concrete examples dramatically\nreduces the model's trial-and-error overhead in formatting and content framing, resulting in\noutput that is highly aligned with the expected structure. The trade-off is reduced creative"
+        },
+        {
+          "score": 0.0313,
+          "vector_score": 0.5975949168205261,
+          "bm25_score": 5.65382163522776,
+          "vector_rank": 5,
+          "bm25_rank": 3,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 47,
+          "char_start": 14229,
+          "char_end": 14736,
+          "text": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on the full experimental analysis, the following configurations are recommended for\nspecific use cases:\n\n• Production environment (speed + format stability required): Few-Shot + Schema On\nusing DeepSeek.\n• Academic or analytical deliverable (depth + density required): CoT Silent + Schema On\nusing DeepSeek or Qwen.\n• Teaching or course material: Qwen with Schema On, any prompt strategy."
+        },
+        {
+          "score": 0.0308,
+          "vector_score": 0.5552676916122437,
+          "bm25_score": 7.531610996716686,
+          "vector_rank": 8,
+          "bm25_rank": 2,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 4,
+          "char_start": 1062,
+          "char_end": 1599,
+          "text": "dependently and in combination to isolate its\nindividual and compound effects.\n\n2. Core Experimental Data\nThe table below shows all six prompt strategy ×  schema constraint combinations tested, with\nkey output metrics:\n\nGroup Prompt\nStrategy\nSchema\nConstraint\nGeneration\nTime (s)\nChapters\n(Macro)\nTotal\nPages\nAvg. Bullet\nPoints/Page\n1 Baseline Off 73.943 6 14 3.20\n2 CoT Silent Off 66.595 6 15 3.50\n3 Few-Shot Off 49.632 6 15 3.93\n4 Baseline On 55.594 4 11 4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00"
+        },
+        {
+          "score": 0.0308,
+          "vector_score": 0.6245238780975342,
+          "bm25_score": 2.810842814504839,
+          "vector_rank": 3,
+          "bm25_rank": 7,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 21,
+          "char_start": 6210,
+          "char_end": 6697,
+          "text": "ables that prioritize logical rigor\nand granular detail over generation speed.\n\n5.3 Baseline + Schema On — Most Unstable\nWithout either the concrete template of Few-Shot or the reasoning scaffolding of CoT, the\nBaseline model struggles under schema constraints. Facing strict JSON requirements with no\nstructural guidance, it \"ends macro planning early\" — collapsing from the standard 6 chapters\ndown to just 4. It compensates by overloading the remaining micro-nodes with content (4.09"
+        }
+      ],
+      "error": ""
+    },
+    {
+      "chapter_idx": 1,
+      "page_idx": 1,
+      "chapter_title": "Prompt 策略横评",
+      "page_title": "CoT-Silent 的优势场景",
+      "rounds": [
+        {
+          "round": 1,
+          "queries": [
+            "CoT-Silent 定义与原理",
+            "CoT-Silent 质量评分对比数据",
+            "CoT-Silent 适用主题类型案例"
+          ],
+          "intent_tags": [
+            "定义",
+            "数据",
+            "案例"
+          ],
+          "coverage": 0.6965,
+          "per_query_hits": {
+            "CoT-Silent 定义与原理": [
+              {
+                "score": 0.0323,
+                "vector_score": 0.5656325817108154,
+                "bm25_score": 4.074160181600258,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 5,
+                "snippet": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.032,
+                "vector_score": 0.6964776515960693,
+                "bm25_score": 2.9431761307562274,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 9,
+                "snippet": "e — the output closely mirrors the provided examples in tone and organization.\n\n3.2 CoT Silent — Logic and Depth\nChain o"
+              },
+              {
+                "score": 0.0315,
+                "vector_score": 0.4723023772239685,
+                "bm25_score": 3.944163192202817,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 4,
+                "snippet": "dependently and in combination to isolate its\nindividual and compound effects.\n\n2. Core Experimental Data\nThe table belo"
+              },
+              {
+                "score": 0.0315,
+                "vector_score": 0.48824596405029297,
+                "bm25_score": 2.9608001792267964,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 47,
+                "snippet": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on "
+              },
+              {
+                "score": 0.0313,
+                "vector_score": 0.5682536959648132,
+                "bm25_score": 2.8416859760381663,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 19,
+                "snippet": "nments with\nstrict requirements on both response speed and output consistency.\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0301,
+                "vector_score": 0.4512156844139099,
+                "bm25_score": 2.9085500673523272,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 1,
+                "snippet": "trategies, Schema Constraints, and Model Performance in LLM-Generated\nOutlines\n\n1. Experiment Overview\nThis report prese"
+              }
+            ],
+            "CoT-Silent 质量评分对比数据": [
+              {
+                "score": 0.0325,
+                "vector_score": 0.6091908812522888,
+                "bm25_score": 4.074160181600258,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 5,
+                "snippet": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.032,
+                "vector_score": 0.6452724933624268,
+                "bm25_score": 2.9431761307562274,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 9,
+                "snippet": "e — the output closely mirrors the provided examples in tone and organization.\n\n3.2 CoT Silent — Logic and Depth\nChain o"
+              },
+              {
+                "score": 0.0315,
+                "vector_score": 0.5530174374580383,
+                "bm25_score": 3.944163192202817,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 4,
+                "snippet": "dependently and in combination to isolate its\nindividual and compound effects.\n\n2. Core Experimental Data\nThe table belo"
+              },
+              {
+                "score": 0.0315,
+                "vector_score": 0.554865837097168,
+                "bm25_score": 2.9608001792267964,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 47,
+                "snippet": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on "
+              },
+              {
+                "score": 0.031,
+                "vector_score": 0.5879696011543274,
+                "bm25_score": 2.8416859760381663,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 19,
+                "snippet": "nments with\nstrict requirements on both response speed and output consistency.\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.029,
+                "vector_score": 0.49322015047073364,
+                "bm25_score": 1.4414583774158511,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 42,
+                "snippet": "chnical and precisely classified language.\n\n8. Conclusions and Recommendations\n\n8.1 Key Findings\n1. Constraints accelera"
+              }
+            ],
+            "CoT-Silent 适用主题类型案例": [
+              {
+                "score": 0.032,
+                "vector_score": 0.6843110918998718,
+                "bm25_score": 2.9431761307562274,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 9,
+                "snippet": "e — the output closely mirrors the provided examples in tone and organization.\n\n3.2 CoT Silent — Logic and Depth\nChain o"
+              },
+              {
+                "score": 0.032,
+                "vector_score": 0.5867637395858765,
+                "bm25_score": 2.9608001792267964,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 47,
+                "snippet": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on "
+              },
+              {
+                "score": 0.0318,
+                "vector_score": 0.5611026287078857,
+                "bm25_score": 4.074160181600258,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 5,
+                "snippet": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.031,
+                "vector_score": 0.5823358297348022,
+                "bm25_score": 2.8416859760381663,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 19,
+                "snippet": "nments with\nstrict requirements on both response speed and output consistency.\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0308,
+                "vector_score": 0.5087876915931702,
+                "bm25_score": 3.944163192202817,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 4,
+                "snippet": "dependently and in combination to isolate its\nindividual and compound effects.\n\n2. Core Experimental Data\nThe table belo"
+              },
+              {
+                "score": 0.0292,
+                "vector_score": 0.5050325393676758,
+                "bm25_score": 1.4054214072524196,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 21,
+                "snippet": "ables that prioritize logical rigor\nand granular detail over generation speed.\n\n5.3 Baseline + Schema On — Most Unstable"
+              }
+            ]
+          }
+        }
+      ],
+      "final_chunks": [
+        {
+          "score": 0.0325,
+          "vector_score": 0.6091908812522888,
+          "bm25_score": 4.074160181600258,
+          "vector_rank": 2,
+          "bm25_rank": 1,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 5,
+          "char_start": 1519,
+          "char_end": 2067,
+          "text": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experimental Report  |  Page 2\nGroup Prompt\nStrategy\nSchema\nConstraint\nGeneration\nTime (s)\nChapters\n(Macro)\nTotal\nPages\nAvg. Bullet\nPoints/Page\n(shortest)\n\nKey observations at a glance: Few-Shot consistently achieves the shortest generation time; CoT\nSilent + Schema On produces the highest information density (4.62 bullet points per page); and\nenabling Schema reduces generation time by approximately 15–25% across all strategies."
+        },
+        {
+          "score": 0.032,
+          "vector_score": 0.6964776515960693,
+          "bm25_score": 2.9431761307562274,
+          "vector_rank": 1,
+          "bm25_rank": 4,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 9,
+          "char_start": 2659,
+          "char_end": 3226,
+          "text": "e — the output closely mirrors the provided examples in tone and organization.\n\n3.2 CoT Silent — Logic and Depth\nChain of Thought prompting enables the model to break down complex historical narratives into\nstructured, causally-linked segments. This approach shines when generating content that\nrequires sequential reasoning — for example, tracing how the \"knowledge engineering\nbottleneck\" of expert systems led inevitably to the rise of statistical learning. Generation time\nstays in the middle range, and this strategy produces the most logically coherent chapter"
+        },
+        {
+          "score": 0.032,
+          "vector_score": 0.5867637395858765,
+          "bm25_score": 2.9608001792267964,
+          "vector_rank": 2,
+          "bm25_rank": 3,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 47,
+          "char_start": 14229,
+          "char_end": 14736,
+          "text": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on the full experimental analysis, the following configurations are recommended for\nspecific use cases:\n\n• Production environment (speed + format stability required): Few-Shot + Schema On\nusing DeepSeek.\n• Academic or analytical deliverable (depth + density required): CoT Silent + Schema On\nusing DeepSeek or Qwen.\n• Teaching or course material: Qwen with Schema On, any prompt strategy."
+        },
+        {
+          "score": 0.0315,
+          "vector_score": 0.4723023772239685,
+          "bm25_score": 3.944163192202817,
+          "vector_rank": 5,
+          "bm25_rank": 2,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 4,
+          "char_start": 1062,
+          "char_end": 1599,
+          "text": "dependently and in combination to isolate its\nindividual and compound effects.\n\n2. Core Experimental Data\nThe table below shows all six prompt strategy ×  schema constraint combinations tested, with\nkey output metrics:\n\nGroup Prompt\nStrategy\nSchema\nConstraint\nGeneration\nTime (s)\nChapters\n(Macro)\nTotal\nPages\nAvg. Bullet\nPoints/Page\n1 Baseline Off 73.943 6 14 3.20\n2 CoT Silent Off 66.595 6 15 3.50\n3 Few-Shot Off 49.632 6 15 3.93\n4 Baseline On 55.594 4 11 4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00"
+        },
+        {
+          "score": 0.0313,
+          "vector_score": 0.5682536959648132,
+          "bm25_score": 2.8416859760381663,
+          "vector_rank": 2,
+          "bm25_rank": 6,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 19,
+          "char_start": 5672,
+          "char_end": 6246,
+          "text": "nments with\nstrict requirements on both response speed and output consistency.\n\nPPT Outline Generation Strategy — Experimental Report  |  Page 4\n5.2 CoT Silent + Schema On — Most In-Depth\nWhen Schema On absorbs the cognitive burden of formatting decisions, Chain of Thought\nreasoning is freed entirely for content decomposition. The result: 7 chapters (the most across all\nconditions) and the highest micro-information density at 4.62 bullet points per page. This pairing\nis best suited for academic, analytical, or research-grade deliverables that prioritize logical rigor"
+        },
+        {
+          "score": 0.0301,
+          "vector_score": 0.4512156844139099,
+          "bm25_score": 2.9085500673523272,
+          "vector_rank": 8,
+          "bm25_rank": 5,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 1,
+          "char_start": 137,
+          "char_end": 665,
+          "text": "trategies, Schema Constraints, and Model Performance in LLM-Generated\nOutlines\n\n1. Experiment Overview\nThis report presents a systematic evaluation of how different prompt strategies and structured\noutput constraints affect the quality, speed, and coherence of PPT outline generation by large\nlanguage models (LLMs). The study covers three dimensions:\n• Prompt Strategy: Baseline, CoT Silent (Chain of Thought), and Few-Shot prompting.\n• Schema Constraints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat)."
+        }
+      ],
+      "error": ""
+    },
+    {
+      "chapter_idx": 2,
+      "page_idx": 0,
+      "chapter_title": "无关章节（用于触发反馈改写）",
+      "page_title": "Transformer 架构的注意力机制",
+      "rounds": [
+        {
+          "round": 1,
+          "queries": [
+            "self-attention 数学公式推导",
+            "多头注意力并行计算原理",
+            "Transformer 位置编码类型对比"
+          ],
+          "intent_tags": [
+            "定义",
+            "方法",
+            "对比"
+          ],
+          "coverage": 0.5348,
+          "per_query_hits": {
+            "self-attention 数学公式推导": [
+              {
+                "score": 0.0164,
+                "vector_score": 0.5064063668251038,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 6,
+                "snippet": "Schema reduces generation time by approximately 15–25% across all strategies.\n\n3. Analysis of Prompt Strategies\nWith Sch"
+              },
+              {
+                "score": 0.0161,
+                "vector_score": 0.48104479908943176,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 28,
+                "snippet": "g-oriented with\ninteractive prompts.\nCase comparisons with\nengineering practice\nrecommendations.\nBackground knowledge\nsu"
+              },
+              {
+                "score": 0.0159,
+                "vector_score": 0.47902944684028625,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 8,
+                "snippet": "s highly aligned with the expected structure. The trade-off is reduced creative\nlatitude — the output closely mirrors th"
+              },
+              {
+                "score": 0.0156,
+                "vector_score": 0.4784124493598938,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 7,
+                "snippet": "strategies exhibit meaningfully different\ncognitive and generative behaviors.\n\n3.1 Few-Shot Prompting — Efficiency and S"
+              },
+              {
+                "score": 0.0154,
+                "vector_score": 0.4781840145587921,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 4,
+                "snippet": "dependently and in combination to isolate its\nindividual and compound effects.\n\n2. Core Experimental Data\nThe table belo"
+              },
+              {
+                "score": 0.0152,
+                "vector_score": 0.4692085087299347,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 5,
+                "snippet": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experi"
+              }
+            ],
+            "多头注意力并行计算原理": [
+              {
+                "score": 0.0164,
+                "vector_score": 0.5347718000411987,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 19,
+                "snippet": "nments with\nstrict requirements on both response speed and output consistency.\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0161,
+                "vector_score": 0.5195754170417786,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 7,
+                "snippet": "strategies exhibit meaningfully different\ncognitive and generative behaviors.\n\n3.1 Few-Shot Prompting — Efficiency and S"
+              },
+              {
+                "score": 0.0159,
+                "vector_score": 0.5137800574302673,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 5,
+                "snippet": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experi"
+              },
+              {
+                "score": 0.0156,
+                "vector_score": 0.5084015727043152,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 22,
+                "snippet": "t 4. It compensates by overloading the remaining micro-nodes with content (4.09\nbullet points per page). This pattern — "
+              },
+              {
+                "score": 0.0154,
+                "vector_score": 0.5077771544456482,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 18,
+                "snippet": "dditive\neffects. Instead, the interactions reveal distinct compound behaviors.\n\n5.1 Few-Shot + Schema On — Most Determin"
+              },
+              {
+                "score": 0.0152,
+                "vector_score": 0.4944186806678772,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 20,
+                "snippet": "demic, analytical, or research-grade deliverables that prioritize logical rigor\nand granular detail over generation spee"
+              }
+            ],
+            "Transformer 位置编码类型对比": [
+              {
+                "score": 0.0315,
+                "vector_score": 0.45506173372268677,
+                "bm25_score": 2.987675389784756,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 29,
+                "snippet": "ngineering practice\nrecommendations.\nBackground knowledge\nsupplementary notes.\n\n6.3 Hierarchical Structure and Chapter L"
+              },
+              {
+                "score": 0.0164,
+                "vector_score": 0.5275601744651794,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 2,
+                "snippet": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tong"
+              },
+              {
+                "score": 0.0161,
+                "vector_score": 0.515296459197998,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 46,
+                "snippet": "M (3rd): Underperforms without schema constraints due to format parsing errors.\nBecomes usable with Schema On, but remai"
+              },
+              {
+                "score": 0.0159,
+                "vector_score": 0.4767273962497711,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 30,
+                "snippet": "r), the phenomenon\n(ChatGPT), and the competitive landscape (China vs. global).\n• Qwen organizes the narrative around pa"
+              },
+              {
+                "score": 0.0156,
+                "vector_score": 0.4636779725551605,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 45,
+                "snippet": "across engineering reliability, logical coherence, and\npagination granularity:\n\n• DeepSeek (1st): Best for high-reliabil"
+              },
+              {
+                "score": 0.0154,
+                "vector_score": 0.462033212184906,
+                "bm25_score": null,
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "chunk_index": 47,
+                "snippet": "ith Schema On, but remains thinner in content depth compared to the\nother two.\n\n8.3 Recommended Configurations\nBased on "
+              }
+            ]
+          }
+        },
+        {
+          "round": 2,
+          "queries": [
+            "self-attention 矩阵运算定义",
+            "多头注意力并发实现方式",
+            "位置编码 相对位置建模"
+          ],
+          "intent_tags": [
+            "数学定义",
+            "并行机制",
+            "位置表征"
+          ],
+          "coverage": 0.5348,
+          "trigger_reason": "round1 coverage 0.535 < threshold 0.55"
+        }
+      ],
+      "final_chunks": [
+        {
+          "score": 0.0315,
+          "vector_score": 0.45506173372268677,
+          "bm25_score": 2.987675389784756,
+          "vector_rank": 6,
+          "bm25_rank": 1,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 29,
+          "char_start": 8590,
+          "char_end": 9112,
+          "text": "ngineering practice\nrecommendations.\nBackground knowledge\nsupplementary notes.\n\n6.3 Hierarchical Structure and Chapter Logic\nAll three models follow the broad arc of \"origins → stagnation → breakthrough → challenges →\nfuture\", but their emphasis and chapter design differ significantly:\n• DeepSeek frames the timeline as a series of narrative \"Acts\", with particularly detailed\ncoverage of post-2010 developments: the architecture (Transformer), the phenomenon\n(ChatGPT), and the competitive landscape (China vs. global)."
+        },
+        {
+          "score": 0.0164,
+          "vector_score": 0.5064063668251038,
+          "bm25_score": null,
+          "vector_rank": 1,
+          "bm25_rank": null,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 6,
+          "char_start": 1987,
+          "char_end": 2234,
+          "text": "Schema reduces generation time by approximately 15–25% across all strategies.\n\n3. Analysis of Prompt Strategies\nWith Schema conditions held constant, the three prompt strategies exhibit meaningfully different\ncognitive and generative behaviors."
+        },
+        {
+          "score": 0.0164,
+          "vector_score": 0.5108116865158081,
+          "bm25_score": null,
+          "vector_rank": 1,
+          "bm25_rank": null,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 8,
+          "char_start": 2572,
+          "char_end": 2739,
+          "text": "s highly aligned with the expected structure. The trade-off is reduced creative\nlatitude — the output closely mirrors the provided examples in tone and organization."
+        },
+        {
+          "score": 0.0164,
+          "vector_score": 0.4738200306892395,
+          "bm25_score": null,
+          "vector_rank": 1,
+          "bm25_rank": null,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 5,
+          "char_start": 1519,
+          "char_end": 2067,
+          "text": "4.09\n5 CoT Silent On 55.245 7 13 4.62 (highest)\n6 Few-Shot On 43.370 5 12 4.00\n\nPPT Outline Generation Strategy — Experimental Report  |  Page 2\nGroup Prompt\nStrategy\nSchema\nConstraint\nGeneration\nTime (s)\nChapters\n(Macro)\nTotal\nPages\nAvg. Bullet\nPoints/Page\n(shortest)\n\nKey observations at a glance: Few-Shot consistently achieves the shortest generation time; CoT\nSilent + Schema On produces the highest information density (4.62 bullet points per page); and\nenabling Schema reduces generation time by approximately 15–25% across all strategies."
+        },
+        {
+          "score": 0.0164,
+          "vector_score": 0.5347718000411987,
+          "bm25_score": null,
+          "vector_rank": 1,
+          "bm25_rank": null,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 19,
+          "char_start": 5672,
+          "char_end": 6246,
+          "text": "nments with\nstrict requirements on both response speed and output consistency.\n\nPPT Outline Generation Strategy — Experimental Report  |  Page 4\n5.2 CoT Silent + Schema On — Most In-Depth\nWhen Schema On absorbs the cognitive burden of formatting decisions, Chain of Thought\nreasoning is freed entirely for content decomposition. The result: 7 chapters (the most across all\nconditions) and the highest micro-information density at 4.62 bullet points per page. This pairing\nis best suited for academic, analytical, or research-grade deliverables that prioritize logical rigor"
+        },
+        {
+          "score": 0.0164,
+          "vector_score": 0.5275601744651794,
+          "bm25_score": null,
+          "vector_rank": 1,
+          "bm25_rank": null,
+          "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+          "chunk_index": 2,
+          "char_start": 585,
+          "char_end": 744,
+          "text": "straints: Schema Off (free-form generation) vs. Schema On (forced JSON\nformat).\n• Model Comparison: DeepSeek, Qwen (Tongyi Qianwen), and GLM (Zhipu Qingyan)."
+        }
+      ],
+      "error": ""
+    }
+  ]
+}

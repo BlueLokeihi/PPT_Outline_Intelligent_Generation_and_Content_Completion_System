@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { runOutline } from '@/services/bridge';
-import type { ChatMessage, ChatSession, RunOutlineResponse } from '@/types';
+import type { ChatMessage, ChatSession, RagMode, RunOutlineResponse } from '@/types';
 
 function createId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -45,6 +45,9 @@ export const useChatStore = defineStore('chat', () => {
   const schema = ref<'on' | 'off'>('on');
   const minSlides = ref(10);
   const maxSlides = ref(18);
+  const useRag = ref(false);
+  const corpusId = ref('');
+  const ragMode = ref<RagMode>('hybrid');
 
   const activeSession = computed(() => sessions.value.find((s) => s.id === activeSessionId.value) ?? sessions.value[0]);
 
@@ -124,6 +127,9 @@ export const useChatStore = defineStore('chat', () => {
       schema: schema.value,
       minSlides: minSlides.value,
       maxSlides: maxSlides.value,
+      useRag: useRag.value && !!corpusId.value,
+      corpusId: corpusId.value,
+      ragMode: ragMode.value,
     };
 
     const res: RunOutlineResponse = await runOutline(payload);
@@ -146,15 +152,21 @@ export const useChatStore = defineStore('chat', () => {
     const chapterCount = res.outline.chapters.length;
     const pageCount = res.outline.chapters.reduce((acc, chapter) => acc + chapter.pages.length, 0);
 
+    const ragSuffix = res.rag?.used
+      ? `\nRAG: corpus=${res.rag.corpus} · ${res.rag.mode}` +
+        (typeof res.rag.elapsed_s === 'number' ? ` · ${res.rag.elapsed_s.toFixed(1)}s` : '')
+      : '';
+
     appendMessage(session.id, {
       role: 'assistant',
-      text: `已生成初版大纲：《${res.outline.title}》\n章节数：${chapterCount}，页数：${pageCount}。你可以继续提出修改意见。`,
+      text: `已生成初版大纲：《${res.outline.title}》\n章节数：${chapterCount}，页数：${pageCount}。你可以继续提出修改意见。${ragSuffix}`,
       outline: res.outline,
       metadata: {
         provider: res.provider,
         strategy: res.strategy,
         schema: res.schema,
         elapsedS: res.elapsedS,
+        rag: res.rag,
       },
     });
     session.status = 'idle';
@@ -169,6 +181,9 @@ export const useChatStore = defineStore('chat', () => {
     schema,
     minSlides,
     maxSlides,
+    useRag,
+    corpusId,
+    ragMode,
     createSession,
     switchSession,
     setPdfContext,

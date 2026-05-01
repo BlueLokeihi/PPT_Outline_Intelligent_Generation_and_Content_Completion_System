@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import type { OutlineResult } from '@/types';
+import type { OutlinePage, OutlineResult } from '@/types';
 
 const props = defineProps<{
   outline: OutlineResult | null;
 }>();
 
 const expanded = ref<Record<string, boolean>>({});
+const evidenceOpen = ref<Record<string, boolean>>({});
 
 watch(
   () => props.outline,
@@ -17,6 +18,7 @@ watch(
       state[ch.title] = true;
     }
     expanded.value = state;
+    evidenceOpen.value = {};
   },
   { immediate: true },
 );
@@ -25,8 +27,29 @@ function toggle(title: string) {
   expanded.value[title] = !expanded.value[title];
 }
 
+function toggleEvidence(key: string) {
+  evidenceOpen.value[key] = !evidenceOpen.value[key];
+}
+
 function totalPages(outline: OutlineResult): number {
   return outline.chapters.reduce((sum, ch) => sum + ch.pages.length, 0);
+}
+
+function totalEvidences(outline: OutlineResult): number {
+  let n = 0;
+  for (const ch of outline.chapters) {
+    for (const p of ch.pages) n += p.evidences?.length ?? 0;
+  }
+  return n;
+}
+
+function pageHasEvidence(page: OutlinePage): boolean {
+  return !!page.evidences && page.evidences.length > 0;
+}
+
+function shortText(text: string, n = 140): string {
+  if (!text) return '';
+  return text.length > n ? text.slice(0, n) + '…' : text;
 }
 </script>
 
@@ -43,6 +66,9 @@ function totalPages(outline: OutlineResult): number {
       <div class="outline-meta">
         <span class="outline-title-badge">{{ outline.title }}</span>
         <span class="outline-stats">{{ outline.chapters.length }} 章 · {{ totalPages(outline) }} 页</span>
+        <span v-if="totalEvidences(outline) > 0" class="outline-rag-badge">
+          🔗 {{ totalEvidences(outline) }} 条引证
+        </span>
       </div>
 
       <div v-if="outline.assumptions?.length" class="assumptions">
@@ -67,7 +93,7 @@ function totalPages(outline: OutlineResult): number {
         <Transition name="slide">
           <div v-if="expanded[chapter.title]" class="chapter-pages">
             <div
-              v-for="page in chapter.pages"
+              v-for="(page, pi) in chapter.pages"
               :key="page.title"
               class="page-item"
             >
@@ -75,6 +101,28 @@ function totalPages(outline: OutlineResult): number {
               <ul v-if="page.bullets?.length" class="page-bullets">
                 <li v-for="bullet in page.bullets" :key="bullet">{{ bullet }}</li>
               </ul>
+
+              <div v-if="pageHasEvidence(page)" class="page-evidences">
+                <button
+                  class="ev-toggle"
+                  type="button"
+                  @click="toggleEvidence(`${ci}-${pi}`)"
+                >
+                  <span class="ev-icon">📚</span>
+                  <span>{{ page.evidences!.length }} 条来源</span>
+                  <span class="ev-arrow" :class="{ rotated: evidenceOpen[`${ci}-${pi}`] }">›</span>
+                </button>
+                <ol v-if="evidenceOpen[`${ci}-${pi}`]" class="ev-list">
+                  <li v-for="(ev, ei) in page.evidences" :key="`${ci}-${pi}-${ei}`">
+                    <div class="ev-source">
+                      <span class="ev-source-name">{{ ev.source }}</span>
+                      <span v-if="typeof ev.chunk_index === 'number'" class="ev-chunk">#chunk{{ ev.chunk_index }}</span>
+                      <span v-if="typeof ev.score === 'number'" class="ev-score">score {{ ev.score.toFixed(3) }}</span>
+                    </div>
+                    <div class="ev-text">{{ shortText(ev.text, 220) }}</div>
+                  </li>
+                </ol>
+              </div>
             </div>
           </div>
         </Transition>
@@ -266,6 +314,102 @@ function totalPages(outline: OutlineResult): number {
   font-size: 11px;
   color: #6b7280;
   line-height: 1.5;
+}
+
+.outline-rag-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0e7490;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.page-evidences {
+  margin-top: 6px;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 4px;
+}
+
+.ev-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  font-size: 11px;
+  color: #0e7490;
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.ev-toggle:hover {
+  color: #0369a1;
+}
+
+.ev-icon {
+  font-size: 12px;
+}
+
+.ev-arrow {
+  display: inline-block;
+  font-size: 13px;
+  transition: transform 0.15s;
+  transform: rotate(0deg);
+}
+
+.ev-arrow.rotated {
+  transform: rotate(90deg);
+}
+
+.ev-list {
+  margin: 4px 0 0;
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ev-list li {
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.ev-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+
+.ev-source-name {
+  font-weight: 600;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.ev-chunk {
+  color: #64748b;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+}
+
+.ev-score {
+  color: #0369a1;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+}
+
+.ev-text {
+  color: #475569;
+  background: #f1f5f9;
+  border-left: 2px solid #38bdf8;
+  padding: 4px 6px;
+  border-radius: 0 4px 4px 0;
 }
 
 .slide-enter-active,

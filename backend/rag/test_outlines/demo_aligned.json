@@ -1,0 +1,65 @@
+{
+  "title": "PPT 大纲生成策略实验汇报",
+  "chapters": [
+    {
+      "title": "Schema 约束与结构化输出",
+      "pages": [
+        {
+          "title": "Schema On 的工程可靠性",
+          "bullets": [
+            "Schema 校验对 JSON 解析失败率的影响",
+            "DeepSeek 与 Qwen 在 Schema On 下的表现",
+            "强制结构化对生成稳定性的提升幅度"
+          ],
+          "notes": "重点说明：可靠性提升是数量级的。"
+        },
+        {
+          "title": "Schema Off 的失败模式",
+          "bullets": [
+            "GLM 在无 Schema 时的输出问题",
+            "格式漂移与额外字段错误的常见类型",
+            "为什么纯自由生成不够稳"
+          ],
+          "notes": "用 GLM 的失败案例作为反面教材。"
+        }
+      ]
+    },
+    {
+      "title": "Prompt 策略横评",
+      "pages": [
+        {
+          "title": "Few-Shot 的效率与规范性",
+          "bullets": [
+            "Few-Shot 模板对页数与章节结构的约束力",
+            "与 Baseline / CoT-Silent 在质量分上的差异",
+            "Few-Shot + Schema On 为何最确定"
+          ],
+          "notes": "对应实验报告 §3.1 与 §5.1。"
+        },
+        {
+          "title": "CoT-Silent 的优势场景",
+          "bullets": [
+            "Chain-of-Thought 隐式推理的内容深度",
+            "CoT-Silent 在质量评分上的位置",
+            "适用什么类型的主题资料"
+          ],
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "title": "无关章节（用于触发反馈改写）",
+      "pages": [
+        {
+          "title": "Transformer 架构的注意力机制",
+          "bullets": [
+            "self-attention 的数学定义",
+            "多头注意力的并行性",
+            "位置编码与相对位置"
+          ],
+          "notes": "本页应当无法在 demo 语料中找到对应内容。"
+        }
+      ]
+    }
+  ]
+}

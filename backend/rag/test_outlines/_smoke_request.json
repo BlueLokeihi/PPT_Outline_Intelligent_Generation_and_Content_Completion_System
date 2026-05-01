@@ -1,0 +1,11 @@
+{
+  "messages": [{"role": "user", "text": "请围绕 schema 校验、Few-Shot 与 CoT-Silent 三种 prompt 策略对比，做一份 5-6 页的实验汇报"}],
+  "pdfText": "",
+  "provider": "qwen",
+  "strategy": "baseline",
+  "schema": "on",
+  "minSlides": 5,
+  "maxSlides": 7,
+  "useRag": true,
+  "corpusId": "demo"
+}
