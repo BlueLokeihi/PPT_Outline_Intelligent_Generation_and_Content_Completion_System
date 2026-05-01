@@ -47,6 +47,22 @@ def get_outline_schema() -> Dict[str, Any]:
                                         "items": {"type": "string", "minLength": 1, "maxLength": 200},
                                     },
                                     "notes": {"type": "string", "maxLength": 1200},
+                                    "evidences": {
+                                        "type": "array",
+                                        "minItems": 0,
+                                        "maxItems": 20,
+                                        "items": {
+                                            "type": "object",
+                                            "required": ["text", "source"],
+                                            "additionalProperties": False,
+                                            "properties": {
+                                                "text": {"type": "string", "minLength": 1, "maxLength": 1200},
+                                                "source": {"type": "string", "minLength": 1, "maxLength": 500},
+                                                "score": {"type": "number"},
+                                                "chunk_index": {"type": "integer"},
+                                            },
+                                        },
+                                    },
                                 },
                             },
                         },

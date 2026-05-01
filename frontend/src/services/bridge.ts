@@ -1,4 +1,4 @@
-import type { RunOutlinePayload, RunOutlineResponse } from '@/types';
+import type { RagCorpusInfo, RunOutlinePayload, RunOutlineResponse } from '@/types';
 
 const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 const serviceNotAvailableMessage =
@@ -53,5 +53,15 @@ export async function runOutline(payload: RunOutlinePayload): Promise<RunOutline
       ok: false,
       error: error instanceof Error ? error.message : serviceNotAvailableMessage,
     };
+  }
+}
+
+export async function getCorpora(): Promise<{ ok: boolean; corpora: RagCorpusInfo[] }> {
+  try {
+    return await requestJson<{ ok: boolean; corpora: RagCorpusInfo[] }>('/rag/corpora', {
+      method: 'GET',
+    });
+  } catch {
+    return { ok: false, corpora: [] };
   }
 }

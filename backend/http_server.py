@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -14,6 +15,16 @@ from outline.evaluation import compute_quality
 from outline.generator import generate_once
 from outline.io_utils import maybe_truncate
 from outline.prompt_strategies import PromptOptions, build_messages
+from rag.embedder import load_embed_config
+from rag.enricher import (
+    confidence_from_coverage,
+    enrich_page,
+    snippets_from_research_chunks,
+)
+from rag.query_rewriter import page_context_from_outline
+from rag.research import research_page
+from rag.retriever import HybridRetriever
+from rag.store import corpus_path
 
 # 加载 .env 文件中的环境变量
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +54,15 @@ class OutlineRequest(BaseModel):
     schema: Literal["on", "off"] = "on"
     minSlides: int = Field(default=10, ge=1, le=100)
     maxSlides: int = Field(default=18, ge=1, le=100)
+    # —— RAG 相关（默认关闭，旧客户端无影响） ——
+    useRag: bool = False
+    corpusId: str = ""
+    ragMode: Literal["vector", "bm25", "hybrid"] = "hybrid"
+    ragRewriteThreshold: float = Field(default=0.45, ge=0.0, le=1.0)
+    ragMaxRounds: int = Field(default=2, ge=1, le=3)
+    ragMaxSnippets: int = Field(default=8, ge=1, le=20)
+    ragSkipLowConfidence: bool = False
+    ragLowThreshold: float = Field(default=0.4, ge=0.0, le=1.0)
 
 
 app = FastAPI(title="PPT Outline Local API", version="0.1.0")
@@ -121,10 +141,153 @@ def run_outline(request: OutlineRequest) -> Dict[str, Any]:
         response["quality"] = asdict(
             compute_quality(result.outline, min_slides=min_slides, max_slides=max_slides)
         )
+
+        if request.useRag and request.corpusId.strip():
+            try:
+                rag_meta = _run_rag_pipeline(request, response["outline"])
+                response["rag"] = rag_meta
+                response["elapsedS"] = round(
+                    response["elapsedS"] + float(rag_meta.get("elapsed_s") or 0.0), 3
+                )
+            except Exception as exc:  # noqa: BLE001
+                response["rag"] = {"used": False, "error": str(exc)}
         return response
 
     response["error"] = result.error or "生成失败"
     return response
+
+
+# ---- RAG 管道（research + enrich，全在内存中流转） ------------------------
+
+def _run_rag_pipeline(
+    request: OutlineRequest, outline: Dict[str, Any]
+) -> Dict[str, Any]:
+    """跑 research + enrich，原地修改 outline（写回 evidences/bullets/notes）。
+
+    返回 rag meta：corpus、模型信息、各页 coverage/confidence/used_sources。
+    """
+    t_start = time.time()
+    corpus_id = request.corpusId.strip()
+    out_dir = corpus_path(corpus_id)
+
+    retriever = HybridRetriever(out_dir)
+    manifest = retriever.store.load_manifest()    # 不存在则抛 FileNotFoundError
+
+    embed_cfg = None
+    if request.ragMode in ("vector", "hybrid"):
+        embed_cfg = load_embed_config(
+            str(MODELS_CONFIG),
+            provider=request.provider,
+            model=manifest.get("embedding_model"),
+        )
+
+    llm_client, llm_model, _defaults, _cfg = build_provider(
+        request.provider, config_path=str(MODELS_CONFIG)
+    )
+
+    overall_topic = str(outline.get("title", ""))
+    chapters = outline.get("chapters") or []
+    page_meta: List[Dict[str, Any]] = []
+
+    for c_idx, chapter in enumerate(chapters):
+        for p_idx, page in enumerate(chapter.get("pages") or []):
+            page_title = str(page.get("title", ""))
+            ctx = page_context_from_outline(outline, c_idx, p_idx)
+
+            # ---- research：query 改写 + 多轮检索 ----
+            r = research_page(
+                ctx,
+                retriever=retriever,
+                embed_cfg=embed_cfg,
+                llm_client=llm_client,
+                llm_model=llm_model,
+                mode=request.ragMode,
+                k=6,
+                recall_k=20,
+                rrf_k=60,
+                rewrite_threshold=request.ragRewriteThreshold,
+                max_rounds=request.ragMaxRounds,
+                verbose=False,
+            )
+            if r.get("error"):
+                page_meta.append({
+                    "chapter_idx": c_idx, "page_idx": p_idx,
+                    "page_title": page_title,
+                    "enrichment": "research_failed",
+                    "error": r["error"],
+                })
+                continue
+
+            rounds = r.get("rounds") or []
+            coverage = float(rounds[-1].get("coverage") or 0.0) if rounds else 0.0
+            confidence = confidence_from_coverage(coverage)
+
+            # ---- 低置信度 skip 选项 ----
+            if request.ragSkipLowConfidence and coverage < request.ragLowThreshold:
+                page_meta.append({
+                    "chapter_idx": c_idx, "page_idx": p_idx,
+                    "page_title": page_title,
+                    "enrichment": "skipped_low_confidence",
+                    "coverage": round(coverage, 4),
+                    "confidence": confidence,
+                })
+                continue
+
+            # ---- enrich：浓缩为 bullets+notes+evidences ----
+            snippets = snippets_from_research_chunks(r.get("final_chunks") or [])
+            er = enrich_page(
+                overall_topic=overall_topic,
+                chapter_title=str(chapter.get("title", "")),
+                page_title=page_title,
+                original_bullets=ctx.bullets,
+                original_notes=ctx.notes,
+                snippets=snippets,
+                coverage=coverage,
+                client=llm_client,
+                model=llm_model,
+                temperature=0.3,
+                max_snippets=request.ragMaxSnippets,
+            )
+            if er.error or not er.bullets:
+                page_meta.append({
+                    "chapter_idx": c_idx, "page_idx": p_idx,
+                    "page_title": page_title,
+                    "enrichment": "failed",
+                    "coverage": round(coverage, 4),
+                    "confidence": confidence,
+                    "error": er.error,
+                })
+                continue
+
+            # 写回 outline（原地修改）
+            page["bullets"] = er.bullets
+            page["notes"] = er.notes
+            if er.evidences:
+                page["evidences"] = er.evidences
+            elif "evidences" in page:
+                del page["evidences"]
+
+            page_meta.append({
+                "chapter_idx": c_idx, "page_idx": p_idx,
+                "page_title": page_title,
+                "enrichment": "ok",
+                "coverage": round(coverage, 4),
+                "confidence": confidence,
+                "used_source_ids": er.used_source_ids,
+                "n_evidences": len(er.evidences),
+            })
+
+    return {
+        "used": True,
+        "corpus": corpus_id,
+        "mode": request.ragMode,
+        "embedding_model": manifest.get("embedding_model"),
+        "index_size": manifest.get("size"),
+        "rewrite_threshold": request.ragRewriteThreshold,
+        "max_rounds": request.ragMaxRounds,
+        "page_meta": page_meta,
+        "elapsed_s": round(time.time() - t_start, 3),
+    }
 
 
 @app.post("/api/ping")
@@ -148,6 +311,35 @@ def api_runtime_info() -> Dict[str, Any]:
             "providers": ["qwen", "glm", "deepseek"],
             "strategies": ["baseline", "few_shot", "cot_silent"],
         }
+
+
+@app.get("/api/rag/corpora")
+def api_rag_corpora() -> Dict[str, Any]:
+    """列出已建好的索引（backend/rag/indexes/<id>/）。"""
+    base = BACKEND_ROOT / "rag" / "indexes"
+    if not base.exists():
+        return {"ok": True, "corpora": []}
+    items: List[Dict[str, Any]] = []
+    for d in sorted(base.iterdir()):
+        if not d.is_dir():
+            continue
+        manifest_path = d / "manifest.json"
+        if not manifest_path.exists():
+            continue
+        try:
+            import json as _json
+            manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+            items.append({
+                "id": d.name,
+                "size": manifest.get("size"),
+                "dim": manifest.get("dim"),
+                "embedding_model": manifest.get("embedding_model"),
+                "built_at": manifest.get("built_at"),
+                "has_bm25": (d / "tokens.jsonl").exists(),
+            })
+        except Exception:
+            continue
+    return {"ok": True, "corpora": items}
 
 
 @app.post("/api/outline")

@@ -1,0 +1,209 @@
+{
+  "meta": {
+    "source_outline": "rag/test_outlines/demo_aligned.json",
+    "source_research": "rag/test_outlines/demo_aligned_research.json",
+    "corpus": "demo",
+    "embedding_model": "text-embedding-v3",
+    "rewrite_provider": "qwen",
+    "rewrite_model": "qwen-plus",
+    "enrich_provider": "qwen",
+    "enrich_model": "qwen-plus",
+    "elapsed_s": 29.74,
+    "schema_ok": true,
+    "schema_error": "",
+    "page_meta": [
+      {
+        "chapter_idx": 0,
+        "page_idx": 0,
+        "page_title": "Schema On 的工程可靠性",
+        "enrichment": "ok",
+        "coverage": 0.7244,
+        "confidence": "high",
+        "used_source_ids": [
+          2,
+          3,
+          5,
+          6
+        ],
+        "n_evidences": 4
+      },
+      {
+        "chapter_idx": 0,
+        "page_idx": 1,
+        "page_title": "Schema Off 的失败模式",
+        "enrichment": "ok",
+        "coverage": 0.7151,
+        "confidence": "high",
+        "used_source_ids": [],
+        "n_evidences": 0
+      },
+      {
+        "chapter_idx": 1,
+        "page_idx": 0,
+        "page_title": "Few-Shot 的效率与规范性",
+        "enrichment": "ok",
+        "coverage": 0.6942,
+        "confidence": "high",
+        "used_source_ids": [
+          3,
+          5
+        ],
+        "n_evidences": 2
+      },
+      {
+        "chapter_idx": 1,
+        "page_idx": 1,
+        "page_title": "CoT-Silent 的优势场景",
+        "enrichment": "ok",
+        "coverage": 0.6965,
+        "confidence": "high",
+        "used_source_ids": [
+          1,
+          2,
+          5
+        ],
+        "n_evidences": 3
+      },
+      {
+        "chapter_idx": 2,
+        "page_idx": 0,
+        "page_title": "Transformer 架构的注意力机制",
+        "enrichment": "ok",
+        "coverage": 0.5348,
+        "confidence": "medium",
+        "used_source_ids": [],
+        "n_evidences": 0
+      }
+    ]
+  },
+  "outline": {
+    "title": "PPT 大纲生成策略实验汇报",
+    "chapters": [
+      {
+        "title": "Schema 约束与结构化输出",
+        "pages": [
+          {
+            "title": "Schema On 的工程可靠性",
+            "bullets": [
+              "Schema On 将 GLM 的 JSON 解析失败率从 100% 降至 0%",
+              "DeepSeek + Schema On 被推荐为生产环境首选配置",
+              "Schema On 使生成耗时降低 15–25%",
+              "强制 JSON 格式显著提升结构严谨性与逻辑深度"
+            ],
+            "notes": "本页聚焦工程可靠性——不是小幅优化，而是数量级跃升。典型例证：GLM 在 Schema Off 下完全无法输出合法 JSON（chunk34），开启后即稳定可用；DeepSeek 在 Schema On 下不仅格式可靠，还自发增强内容结构（如新增‘AI能力演进路径’页）。注意：该提升非牺牲质量换得，反伴逻辑深度提升（chunk39）与耗时下降（chunk13）。",
+            "evidences": [
+              {
+                "text": "orcing format compliance.  7.1 Engineering Reliability: A Decisive Improvement  PPT Outline Generation Strategy — Experimental Report  |  Page 6 The most dramatic change is the resolution of GLM's JSON validity problem. In Schema Off mode, GLM's output failed to parse entirely. In Schema On mode, it successfully generated fully compliant JSON, with metadata validation confirming schema_ok: true. A...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.0325,
+                "chunk_index": 34
+              },
+              {
+                "text": "ith Schema On, but remains thinner in content depth compared to the other two.  8.3 Recommended Configurations Based on the full experimental analysis, the following configurations are recommended for specific use cases:  • Production environment (speed + format stability required): Few-Shot + Schema On using DeepSeek. • Academic or analytical deliverable (depth + density required): CoT Silent + S...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.0325,
+                "chunk_index": 47
+              },
+              {
+                "text": "On across all prompt strategies reveals three consistent, independent effects.  4.1 Computational Acceleration Enabling Schema reduces generation time by 15–25% across all prompt strategies. The strict attribute-value structure of the JSON format narrows the model's output search space, eliminating the overhead of exploratory free-form formatting. This makes Schema On the single most effective lev...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.0312,
+                "chunk_index": 13
+              },
+              {
+                "text": "rong — they represent different strengths made more legible by the constraint.  7.3 Structural Rigor and Logical Depth Schema On also raises the analytical quality of content across the board: • DeepSeek adds a dedicated page on the \"AI Capability Evolution Path\" (perceptual intelligence → cognitive → generative → decision-making) and explicitly addresses explainable AI (XAI) and alignment in its ...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.031,
+                "chunk_index": 39
+              }
+            ]
+          },
+          {
+            "title": "Schema Off 的失败模式",
+            "bullets": [
+              "GLM 在 Schema Off 模式下 JSON 输出完全无法解析（来源：chunk34）",
+              "DeepSeek 与 Qwen 均生成合法 JSON；GLM 未通过格式校验（chunk24）",
+              "Schema Off 下 GLM 存在结构鲁棒性缺陷（chunk25）",
+              "三模型对比实验覆盖工程可靠性、逻辑连贯性等维度（chunk23）"
+            ],
+            "notes": "本页以 GLM 为反面案例，说明无 Schema 约束时的系统性风险。注意强调：其输出不是偶尔出错，而是‘完全无法解析’（见 chunk34），这直接阻断下游程序调用。对比 DeepSeek/Qwen 的稳定表现（chunk24），凸显 Schema 对工程落地的决定性作用。"
+          }
+        ]
+      },
+      {
+        "title": "Prompt 策略横评",
+        "pages": [
+          {
+            "title": "Few-Shot 的效率与规范性",
+            "bullets": [
+              "Few-Shot生成耗时最短：Schema On下仅43.4s（来源#chunk7）",
+              "Few-Shot + Schema On质量分43.37，页数5，章节12（来源#chunk5）",
+              "Few-Shot提供内容模板，Schema On锁定格式，协同形成‘装配线’模式（来源#chunk18）",
+              "Few-Shot + Schema On被推荐用于生产环境（速度+格式稳定性）（来源#chunk47）"
+            ],
+            "notes": "本页聚焦Few-Shot的核心优势：效率与规范性。实验显示其在所有策略中生成最快，尤其叠加Schema约束后，结构确定性最强。对比Baseline+Schema On的不稳定性（#chunk21），Few-Shot+Schema构成最可靠的生产配置。讲解时可强调‘模板+锁格’的协同机制。",
+            "evidences": [
+              {
+                "text": "strategies exhibit meaningfully different cognitive and generative behaviors.  3.1 Few-Shot Prompting — Efficiency and Specification Few-Shot consistently delivers the shortest generation time across both schema conditions (49.6s with Schema Off; 43.4s with Schema On). Providing concrete examples dramatically reduces the model's trial-and-error overhead in formatting and content framing, resulting...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.0325,
+                "chunk_index": 7
+              },
+              {
+                "text": "dependently and in combination to isolate its individual and compound effects.  2. Core Experimental Data The table below shows all six prompt strategy ×  schema constraint combinations tested, with key output metrics:  Group Prompt Strategy Schema Constraint Generation Time (s) Chapters (Macro) Total Pages Avg. Bullet Points/Page 1 Baseline Off 73.943 6 14 3.20 2 CoT Silent Off 66.595 6 15 3.50 3...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.0308,
+                "chunk_index": 4
+              }
+            ]
+          },
+          {
+            "title": "CoT-Silent 的优势场景",
+            "bullets": [
+              "CoT-Silent + Schema On 内容深度最高（55.245分）",
+              "Chain-of-Thought 隐式推理强化历史类因果结构生成",
+              "适用于需深度逻辑分解的复杂叙事主题",
+              "生成时间略长，但质量评分居首（4.62分，最高）"
+            ],
+            "notes": "各位请注意：CoT-Silent 的优势不是泛用的，而是在 Schema 约束开启时才充分释放——此时格式负担被卸载，模型专注内容推理。比如生成‘辛亥革命背景—过程—影响’这类强因果历史脉络时，它比 Few-Shot（43.370分）明显更扎实。下一页我们将对比其耗时代价。",
+            "evidences": [
+              {
+                "text": "4.09 5 CoT Silent On 55.245 7 13 4.62 (highest) 6 Few-Shot On 43.370 5 12 4.00  PPT Outline Generation Strategy — Experimental Report  |  Page 2 Group Prompt Strategy Schema Constraint Generation Time (s) Chapters (Macro) Total Pages Avg. Bullet Points/Page (shortest)  Key observations at a glance: Few-Shot consistently achieves the shortest generation time; CoT Silent + Schema On produces the hig...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.0325,
+                "chunk_index": 5
+              },
+              {
+                "text": "e — the output closely mirrors the provided examples in tone and organization.  3.2 CoT Silent — Logic and Depth Chain of Thought prompting enables the model to break down complex historical narratives into structured, causally-linked segments. This approach shines when generating content that requires sequential reasoning — for example, tracing how the \"knowledge engineering bottleneck\" of expert...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.032,
+                "chunk_index": 9
+              },
+              {
+                "text": "nments with strict requirements on both response speed and output consistency.  PPT Outline Generation Strategy — Experimental Report  |  Page 4 5.2 CoT Silent + Schema On — Most In-Depth When Schema On absorbs the cognitive burden of formatting decisions, Chain of Thought reasoning is freed entirely for content decomposition. The result: 7 chapters (the most across all conditions) and the highest...",
+                "source": "PPT_Outline_Generation_Strategy_Report.pdf",
+                "score": 0.0313,
+                "chunk_index": 19
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "无关章节（用于触发反馈改写）",
+        "pages": [
+          {
+            "title": "Transformer 架构的注意力机制",
+            "bullets": [
+              "self-attention 是 Transformer 的核心计算单元",
+              "多头注意力实现并行子空间特征提取",
+              "位置编码弥补序列顺序信息缺失",
+              "相对位置建模在长文本中更鲁棒"
+            ],
+            "notes": "本页聚焦 Transformer 架构底层机制，与实验报告主体（如 Schema 约束、Few-Shot 策略等）无直接数据关联。讲解时可强调：这些基础组件支撑了后续所有 PPT 大纲生成策略的建模能力——例如位置编码保障时间线结构（如‘origins → breakthrough’）的逻辑连贯性。"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -11,6 +11,7 @@ export interface ChatMessage {
     strategy?: string;
     schema?: 'on' | 'off';
     elapsedS?: number;
+    rag?: RagResultMeta;
   };
 }
 
@@ -35,12 +36,59 @@ export interface RunOutlinePayload {
   schema: 'on' | 'off';
   minSlides: number;
   maxSlides: number;
+  useRag?: boolean;
+  corpusId?: string;
+  ragMode?: RagMode;
+}
+
+export interface OutlineEvidence {
+  text: string;
+  source: string;
+  score?: number;
+  chunk_index?: number;
 }
 
 export interface OutlinePage {
   title: string;
   bullets: string[];
   notes: string;
+  evidences?: OutlineEvidence[];
+}
+
+export type RagMode = 'vector' | 'bm25' | 'hybrid';
+
+export interface RagPageMeta {
+  chapter_idx: number;
+  page_idx: number;
+  page_title: string;
+  enrichment: string;
+  coverage?: number;
+  confidence?: 'high' | 'medium' | 'low';
+  used_source_ids?: number[];
+  n_evidences?: number;
+  error?: string;
+}
+
+export interface RagResultMeta {
+  used: boolean;
+  corpus?: string;
+  mode?: RagMode;
+  embedding_model?: string;
+  index_size?: number;
+  rewrite_threshold?: number;
+  max_rounds?: number;
+  page_meta?: RagPageMeta[];
+  elapsed_s?: number;
+  error?: string;
+}
+
+export interface RagCorpusInfo {
+  id: string;
+  size: number;
+  dim: number;
+  embedding_model: string;
+  built_at: string;
+  has_bm25: boolean;
 }
 
 export interface OutlineChapter {
@@ -62,4 +110,5 @@ export interface RunOutlineResponse {
   strategy?: string;
   schema?: 'on' | 'off';
   outline?: OutlineResult;
+  rag?: RagResultMeta;
 }

@@ -5,15 +5,16 @@ import PdfUploader from '@/components/PdfUploader.vue';
 import ChatComposer from '@/components/ChatComposer.vue';
 import RequirementsForm from '@/components/RequirementsForm.vue';
 import OutlinePanel from '@/components/OutlinePanel.vue';
-import { getRuntimeInfo, pingBridge } from '@/services/bridge';
+import { getCorpora, getRuntimeInfo, pingBridge } from '@/services/bridge';
 import { useChatStore } from '@/stores/chat';
-import type { OutlineResult } from '@/types';
+import type { OutlineResult, RagCorpusInfo } from '@/types';
 
 const store = useChatStore();
 
 const bridgeStatus = ref('正在检测桥接状态...');
 const availableProviders = ref<string[]>(['qwen', 'glm', 'deepseek']);
 const availableStrategies = ref<Array<'baseline' | 'few_shot' | 'cot_silent'>>(['baseline', 'few_shot', 'cot_silent']);
+const availableCorpora = ref<RagCorpusInfo[]>([]);
 const generatingSeconds = ref(0);
 let generatingTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -47,7 +48,7 @@ async function onSend(text: string) {
 }
 
 onMounted(async () => {
-  const [ping, runtime] = await Promise.all([pingBridge(), getRuntimeInfo()]);
+  const [ping, runtime, corpora] = await Promise.all([pingBridge(), getRuntimeInfo(), getCorpora()]);
   bridgeStatus.value = ping.ok ? '桥接已连接' : `桥接未连接：${ping.message}`;
 
   if (runtime.ok) {
@@ -63,6 +64,13 @@ onMounted(async () => {
       if (!runtime.strategies.includes(store.strategy)) {
         store.strategy = (runtime.strategies[0] as 'baseline' | 'few_shot' | 'cot_silent') ?? 'baseline';
       }
+    }
+  }
+
+  if (corpora.ok && corpora.corpora.length > 0) {
+    availableCorpora.value = corpora.corpora;
+    if (!store.corpusId) {
+      store.corpusId = corpora.corpora[0].id;
     }
   }
 });
@@ -126,6 +134,30 @@ onBeforeUnmount(() => {
             <select v-model="store.schema">
               <option value="on">on</option>
               <option value="off">off</option>
+            </select>
+          </label>
+
+          <label class="rag-toggle" :class="{ disabled: availableCorpora.length === 0 }">
+            <input type="checkbox" v-model="store.useRag" :disabled="availableCorpora.length === 0" />
+            <span>RAG增强</span>
+          </label>
+
+          <label v-if="store.useRag" class="rag-corpus">
+            知识库
+            <select v-model="store.corpusId" :disabled="availableCorpora.length === 0">
+              <option v-if="availableCorpora.length === 0" value="">(尚无)</option>
+              <option v-for="c in availableCorpora" :key="c.id" :value="c.id">
+                {{ c.id }} · {{ c.size }}块
+              </option>
+            </select>
+          </label>
+
+          <label v-if="store.useRag" class="rag-mode">
+            模式
+            <select v-model="store.ragMode">
+              <option value="hybrid">hybrid</option>
+              <option value="vector">vector</option>
+              <option value="bm25">bm25</option>
             </select>
           </label>
         </div>

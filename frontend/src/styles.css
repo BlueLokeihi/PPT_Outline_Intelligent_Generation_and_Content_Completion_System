@@ -117,6 +117,38 @@ body {
   color: #4b5563;
 }
 
+.toolbar-controls label.rag-toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0e7490;
+  align-self: end;
+}
+
+.toolbar-controls label.rag-toggle.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.toolbar-controls label.rag-toggle input {
+  margin: 0;
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+.toolbar-controls label.rag-corpus,
+.toolbar-controls label.rag-mode {
+  font-weight: 500;
+  color: #155e75;
+}
+
 select,
 input,
 textarea,

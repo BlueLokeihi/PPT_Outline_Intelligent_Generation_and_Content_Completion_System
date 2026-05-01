@@ -1,0 +1,6 @@
+{
+  "embedding_model": "text-embedding-v3",
+  "dim": 1024,
+  "size": 49,
+  "built_at": "2026-04-30 14:23:52"
+}
