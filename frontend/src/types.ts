@@ -23,6 +23,7 @@ export interface ChatSession {
   messages: ChatMessage[];
   pdfText: string;
   pdfName: string;
+  editableOutline?: OutlineResult;
   status: 'idle' | 'running' | 'error';
   lastError: string;
 }
@@ -111,4 +112,16 @@ export interface RunOutlineResponse {
   schema?: 'on' | 'off';
   outline?: OutlineResult;
   rag?: RagResultMeta;
+}
+
+export interface SaveOutlinePayload {
+  conversationId?: string;
+  outline: OutlineResult;
+}
+
+export interface SaveOutlineResponse {
+  ok: boolean;
+  file?: string;
+  relativePath?: string;
+  error?: string;
 }

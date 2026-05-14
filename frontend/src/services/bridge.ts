@@ -1,4 +1,10 @@
-import type { RagCorpusInfo, RunOutlinePayload, RunOutlineResponse } from '@/types';
+import type {
+  RagCorpusInfo,
+  RunOutlinePayload,
+  RunOutlineResponse,
+  SaveOutlinePayload,
+  SaveOutlineResponse,
+} from '@/types';
 
 const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 const serviceNotAvailableMessage =
@@ -63,5 +69,19 @@ export async function getCorpora(): Promise<{ ok: boolean; corpora: RagCorpusInf
     });
   } catch {
     return { ok: false, corpora: [] };
+  }
+}
+
+export async function saveOutline(payload: SaveOutlinePayload): Promise<SaveOutlineResponse> {
+  try {
+    return await requestJson<SaveOutlineResponse>('/outline/save', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : serviceNotAvailableMessage,
+    };
   }
 }

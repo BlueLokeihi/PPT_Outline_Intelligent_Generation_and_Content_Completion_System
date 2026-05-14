@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import re
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -63,6 +65,28 @@ class OutlineRequest(BaseModel):
     ragMaxSnippets: int = Field(default=8, ge=1, le=20)
     ragSkipLowConfidence: bool = False
     ragLowThreshold: float = Field(default=0.4, ge=0.0, le=1.0)
+
+
+class OutlineSavePage(BaseModel):
+    title: str = ""
+    bullets: List[str] = Field(default_factory=list)
+    notes: str = ""
+
+
+class OutlineSaveChapter(BaseModel):
+    title: str = ""
+    pages: List[OutlineSavePage] = Field(default_factory=list)
+
+
+class OutlineSaveBody(BaseModel):
+    title: str = ""
+    assumptions: Optional[List[str]] = None
+    chapters: List[OutlineSaveChapter] = Field(default_factory=list)
+
+
+class OutlineSaveRequest(BaseModel):
+    conversationId: Optional[str] = None
+    outline: OutlineSaveBody
 
 
 app = FastAPI(title="PPT Outline Local API", version="0.1.0")
@@ -155,6 +179,50 @@ def run_outline(request: OutlineRequest) -> Dict[str, Any]:
 
     response["error"] = result.error or "生成失败"
     return response
+
+
+def _clean_text(value: str, fallback: str) -> str:
+    text = (value or "").strip()
+    return text if text else fallback
+
+
+def _clean_list(items: Optional[List[str]]) -> List[str]:
+    if not items:
+        return []
+    return [item.strip() for item in items if item and item.strip()]
+
+
+def _normalize_outline(outline: OutlineSaveBody) -> Dict[str, Any]:
+    chapters: List[Dict[str, Any]] = []
+    for chapter in outline.chapters:
+        pages: List[Dict[str, Any]] = []
+        for page in chapter.pages:
+            pages.append({
+                "title": _clean_text(page.title, "未命名页面"),
+                "bullets": _clean_list(page.bullets),
+                "notes": page.notes or "",
+            })
+        chapters.append({
+            "title": _clean_text(chapter.title, "未命名章节"),
+            "pages": pages,
+        })
+
+    payload: Dict[str, Any] = {
+        "title": _clean_text(outline.title, "未命名大纲"),
+        "chapters": chapters,
+    }
+
+    if outline.assumptions:
+        payload["assumptions"] = _clean_list(outline.assumptions)
+
+    return payload
+
+
+def _safe_token(value: Optional[str]) -> str:
+    if not value:
+        return "session"
+    token = re.sub(r"[^a-zA-Z0-9_-]+", "_", value).strip("_")
+    return token[:48] or "session"
 
 
 # ---- RAG 管道（research + enrich，全在内存中流转） ------------------------
@@ -346,6 +414,29 @@ def api_rag_corpora() -> Dict[str, Any]:
 def api_outline(request: OutlineRequest) -> Dict[str, Any]:
     try:
         return run_outline(request)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+@app.post("/api/outline/save")
+def api_outline_save(request: OutlineSaveRequest) -> Dict[str, Any]:
+    try:
+        outline_payload = _normalize_outline(request.outline)
+        out_dir = BACKEND_ROOT / "outline" / "output"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        token = _safe_token(request.conversationId)
+        filename = f"{timestamp}_edited_{token}.json"
+        out_path = out_dir / filename
+        out_path.write_text(
+            json.dumps(outline_payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return {
+            "ok": True,
+            "file": filename,
+            "relativePath": f"outline/output/{filename}",
+        }
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc)}
 

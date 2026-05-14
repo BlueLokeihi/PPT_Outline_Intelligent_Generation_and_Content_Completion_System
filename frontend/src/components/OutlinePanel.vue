@@ -1,30 +1,47 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { saveOutline } from '@/services/bridge';
+import { useChatStore } from '@/stores/chat';
 import type { OutlinePage, OutlineResult } from '@/types';
+import { exportOutlineMarkdown } from '@/utils/outlineExport';
 
 const props = defineProps<{
   outline: OutlineResult | null;
 }>();
 
-const expanded = ref<Record<string, boolean>>({});
+const store = useChatStore();
+const isEditing = ref(false);
+const saving = ref(false);
+const saveStatus = ref('');
+const canEdit = computed(() => !!props.outline);
+
+const expanded = ref<Record<number, boolean>>({});
 const evidenceOpen = ref<Record<string, boolean>>({});
 
 watch(
   () => props.outline,
   (outline) => {
-    if (!outline) return;
-    const state: Record<string, boolean> = {};
-    for (const ch of outline.chapters) {
-      state[ch.title] = true;
+    if (!outline) {
+      expanded.value = {};
+      evidenceOpen.value = {};
+      isEditing.value = false;
+      saveStatus.value = '';
+      return;
     }
+    const state: Record<number, boolean> = {};
+    outline.chapters.forEach((_chapter, index) => {
+      state[index] = true;
+    });
     expanded.value = state;
     evidenceOpen.value = {};
+    isEditing.value = false;
+    saveStatus.value = '';
   },
   { immediate: true },
 );
 
-function toggle(title: string) {
-  expanded.value[title] = !expanded.value[title];
+function toggle(index: number) {
+  expanded.value[index] = !expanded.value[index];
 }
 
 function toggleEvidence(key: string) {
@@ -51,11 +68,58 @@ function shortText(text: string, n = 140): string {
   if (!text) return '';
   return text.length > n ? text.slice(0, n) + '…' : text;
 }
+
+function displayBulletText(text: string): string {
+  return text === '未命名要点' ? '' : text;
+}
+
+function toggleEdit() {
+  if (!props.outline) return;
+  isEditing.value = !isEditing.value;
+}
+
+async function onSave() {
+  if (!props.outline || saving.value) return;
+  saving.value = true;
+  saveStatus.value = '';
+  const res = await saveOutline({
+    conversationId: store.activeSessionId,
+    outline: props.outline,
+  });
+  if (res.ok) {
+    saveStatus.value = res.file ? `已保存：${res.file}` : '已保存到后端';
+  } else {
+    saveStatus.value = res.error ? `保存失败：${res.error}` : '保存失败';
+  }
+  saving.value = false;
+}
+
+function onExport() {
+  if (!props.outline) return;
+  exportOutlineMarkdown(props.outline);
+}
 </script>
 
 <template>
   <section class="outline-panel">
-    <h3>大纲预览</h3>
+    <div class="outline-header">
+      <h3>大纲预览</h3>
+      <div class="outline-actions">
+        <button type="button" class="ghost" :disabled="!canEdit" @click="toggleEdit">
+          {{ isEditing ? '完成编辑' : '编辑大纲' }}
+        </button>
+        <button type="button" class="ghost" :disabled="!canEdit || !isEditing" @click="store.addChapter()">
+          新增章节
+        </button>
+        <button type="button" class="ghost" :disabled="!canEdit" @click="onExport">
+          导出Markdown
+        </button>
+        <button type="button" class="ghost" :disabled="!canEdit || saving" @click="onSave">
+          {{ saving ? '保存中...' : '保存JSON' }}
+        </button>
+      </div>
+    </div>
+    <p v-if="saveStatus" class="outline-status">{{ saveStatus }}</p>
 
     <div v-if="!outline" class="outline-empty">
       <div class="empty-icon">📋</div>
@@ -64,7 +128,16 @@ function shortText(text: string, n = 140): string {
 
     <div v-else class="outline-content">
       <div class="outline-meta">
-        <span class="outline-title-badge">{{ outline.title }}</span>
+        <template v-if="isEditing">
+          <input
+            class="outline-title-input"
+            :value="outline.title"
+            @input="store.updateOutlineTitle(($event.target as HTMLInputElement).value)"
+          />
+        </template>
+        <template v-else>
+          <span class="outline-title-badge">{{ outline.title }}</span>
+        </template>
         <span class="outline-stats">{{ outline.chapters.length }} 章 · {{ totalPages(outline) }} 页</span>
         <span v-if="totalEvidences(outline) > 0" class="outline-rag-badge">
           🔗 {{ totalEvidences(outline) }} 条引证
@@ -80,27 +153,193 @@ function shortText(text: string, n = 140): string {
 
       <div
         v-for="(chapter, ci) in outline.chapters"
-        :key="chapter.title"
+        :key="`chapter-${ci}`"
         class="chapter-block"
       >
-        <button class="chapter-header" @click="toggle(chapter.title)">
-          <span class="chapter-index">{{ ci + 1 }}</span>
-          <span class="chapter-title">{{ chapter.title }}</span>
-          <span class="chapter-badge">{{ chapter.pages.length }}p</span>
-          <span class="chapter-arrow" :class="{ rotated: expanded[chapter.title] }">›</span>
-        </button>
+        <div class="chapter-header">
+          <button class="chapter-toggle" type="button" @click="toggle(ci)">
+            <span class="chapter-index">{{ ci + 1 }}</span>
+            <span class="chapter-arrow" :class="{ rotated: expanded[ci] }">›</span>
+          </button>
+          <div class="chapter-main">
+            <template v-if="isEditing">
+              <input
+                class="chapter-input"
+                :value="chapter.title"
+                @input="store.updateChapterTitle(ci, ($event.target as HTMLInputElement).value)"
+              />
+            </template>
+            <template v-else>
+              <span class="chapter-title">{{ chapter.title }}</span>
+            </template>
+            <span class="chapter-badge">{{ chapter.pages.length }}p</span>
+          </div>
+          <div v-if="isEditing" class="chapter-actions">
+            <button
+              type="button"
+              class="tiny icon-btn up"
+              :disabled="ci === 0"
+              title="上移"
+              aria-label="上移"
+              @click="store.moveChapter(ci, -1)"
+            >
+              ▲
+            </button>
+            <button
+              type="button"
+              class="tiny icon-btn down"
+              :disabled="ci === outline.chapters.length - 1"
+              title="下移"
+              aria-label="下移"
+              @click="store.moveChapter(ci, 1)"
+            >
+              ▼
+            </button>
+            <button
+              type="button"
+              class="tiny icon-btn add"
+              title="新增"
+              aria-label="新增"
+              @click="store.addChapter(ci)"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              class="tiny icon-btn remove"
+              title="删除"
+              aria-label="删除"
+              @click="store.removeChapter(ci)"
+            >
+              -
+            </button>
+          </div>
+        </div>
 
         <Transition name="slide">
-          <div v-if="expanded[chapter.title]" class="chapter-pages">
+          <div v-if="expanded[ci]" class="chapter-pages">
             <div
               v-for="(page, pi) in chapter.pages"
-              :key="page.title"
+              :key="`page-${ci}-${pi}`"
               class="page-item"
             >
-              <div class="page-title">{{ page.title }}</div>
+              <div class="page-header">
+                <template v-if="isEditing">
+                  <input
+                    class="page-input"
+                    :value="page.title"
+                    @input="store.updatePageTitle(ci, pi, ($event.target as HTMLInputElement).value)"
+                  />
+                </template>
+                <template v-else>
+                  <div class="page-title">{{ page.title }}</div>
+                </template>
+                <div v-if="isEditing" class="page-actions">
+                  <button
+                    type="button"
+                    class="tiny icon-btn up"
+                    :disabled="pi === 0"
+                    title="上移"
+                    aria-label="上移"
+                    @click="store.movePage(ci, pi, -1)"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    class="tiny icon-btn down"
+                    :disabled="pi === chapter.pages.length - 1"
+                    title="下移"
+                    aria-label="下移"
+                    @click="store.movePage(ci, pi, 1)"
+                  >
+                    ▼
+                  </button>
+                  <button
+                    type="button"
+                    class="tiny icon-btn add"
+                    title="新增页"
+                    aria-label="新增页"
+                    @click="store.addPage(ci, pi)"
+                  >
+                    +
+                  </button>
+                  <button
+                    type="button"
+                    class="tiny icon-btn remove"
+                    title="删除"
+                    aria-label="删除"
+                    @click="store.removePage(ci, pi)"
+                  >
+                    -
+                  </button>
+                </div>
+              </div>
+
               <ul v-if="page.bullets?.length" class="page-bullets">
-                <li v-for="bullet in page.bullets" :key="bullet">{{ bullet }}</li>
+                <li v-for="(bullet, bi) in page.bullets" :key="`${ci}-${pi}-${bi}`">
+                  <template v-if="isEditing">
+                    <div class="bullet-toolbar">
+                      <div class="bullet-actions left">
+                        <button
+                          type="button"
+                          class="tiny icon-btn up"
+                          :disabled="bi === 0"
+                          title="上移"
+                          aria-label="上移"
+                          @click="store.moveBullet(ci, pi, bi, -1)"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          class="tiny icon-btn down"
+                          :disabled="bi === page.bullets.length - 1"
+                          title="下移"
+                          aria-label="下移"
+                          @click="store.moveBullet(ci, pi, bi, 1)"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                      <div class="bullet-actions right">
+                        <button
+                          type="button"
+                          class="tiny icon-btn add"
+                          title="上方新增"
+                          aria-label="上方新增"
+                          @click="store.addBullet(ci, pi, bi)"
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          class="tiny icon-btn remove"
+                          title="删除"
+                          aria-label="删除"
+                          @click="store.removeBullet(ci, pi, bi)"
+                        >
+                          -
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      class="bullet-input"
+                      rows="2"
+                      :value="displayBulletText(bullet)"
+                      @input="store.updateBulletText(ci, pi, bi, ($event.target as HTMLTextAreaElement).value)"
+                    ></textarea>
+                  </template>
+                  <template v-else>
+                    <span v-if="displayBulletText(bullet)">{{ displayBulletText(bullet) }}</span>
+                  </template>
+                </li>
               </ul>
+              <p v-else class="empty-bullets">暂无要点</p>
+
+              <button v-if="isEditing" type="button" class="inline-add" @click="store.addBullet(ci, pi)">
+                + 新增要点
+              </button>
 
               <div v-if="pageHasEvidence(page)" class="page-evidences">
                 <button
@@ -124,6 +363,10 @@ function shortText(text: string, n = 140): string {
                 </ol>
               </div>
             </div>
+
+            <button v-if="isEditing" type="button" class="inline-add" @click="store.addPage(ci)">
+              + 新增页面
+            </button>
           </div>
         </Transition>
       </div>
@@ -149,6 +392,40 @@ function shortText(text: string, n = 140): string {
   margin: 0;
   font-size: 14px;
   color: #1e3a5f;
+}
+
+.outline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.outline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.outline-status {
+  margin: 0;
+  font-size: 12px;
+  color: #2563eb;
+}
+
+.ghost {
+  border: 1px solid #c7d2fe;
+  background: #fff;
+  color: #1d4ed8;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .outline-empty {
@@ -189,6 +466,16 @@ function shortText(text: string, n = 140): string {
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 4px;
+}
+
+.outline-title-input {
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e40af;
+  min-width: 160px;
 }
 
 .outline-title-badge {
@@ -232,24 +519,50 @@ function shortText(text: string, n = 140): string {
 }
 
 .chapter-header {
-  width: 100%;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 8px 10px;
   background: #f5f3ff;
-  border: none;
-  cursor: pointer;
-  font: inherit;
   font-size: 13px;
   font-weight: 600;
   color: #3730a3;
-  text-align: left;
-  transition: background 0.15s;
 }
 
-.chapter-header:hover {
-  background: #ede9fe;
+.chapter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  color: inherit;
+}
+
+.chapter-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 160px;
+  min-width: 160px;
+}
+
+.chapter-input {
+  flex: 1;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.chapter-actions {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
 .chapter-index {
@@ -296,6 +609,30 @@ function shortText(text: string, n = 140): string {
   gap: 4px;
 }
 
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.page-input {
+  flex: 1;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.page-actions {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
 .page-item {
   padding: 6px 8px;
   border-radius: 6px;
@@ -317,6 +654,102 @@ function shortText(text: string, n = 140): string {
   font-size: 11px;
   color: #6b7280;
   line-height: 1.5;
+}
+
+.bullet-input {
+  width: 100%;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 11px;
+  color: #374151;
+  resize: vertical;
+}
+
+.bullet-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.bullet-actions {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.bullet-actions.right {
+  margin-left: auto;
+}
+
+.tiny {
+  border: 1px solid #c7d2fe;
+  background: #fff;
+  color: #1d4ed8;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.icon-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.icon-btn.up {
+  color: #1d4ed8;
+}
+
+.icon-btn.down {
+  color: #2563eb;
+}
+
+.icon-btn.add {
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.icon-btn.remove {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.tiny:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tiny.danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.inline-add {
+  align-self: flex-start;
+  margin-top: 6px;
+  border: 1px dashed #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.empty-bullets {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 .outline-rag-badge {

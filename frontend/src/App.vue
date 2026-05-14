@@ -33,6 +33,8 @@ const latestOutline = computed((): OutlineResult | null => {
   return null;
 });
 
+const editableOutline = computed(() => activeSession.value?.editableOutline ?? latestOutline.value);
+
 function onPdfExtracted(payload: { fileName: string; text: string }) {
   store.setPdfContext(activeSession.value.id, payload.fileName, payload.text);
 }
@@ -220,7 +222,7 @@ onBeforeUnmount(() => {
 
         <aside class="aux-panel">
           <PdfUploader @extracted="onPdfExtracted" />
-          <OutlinePanel :outline="latestOutline" />
+          <OutlinePanel :outline="editableOutline" />
         </aside>
       </div>
     </section>
