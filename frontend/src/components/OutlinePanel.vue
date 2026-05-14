@@ -173,11 +173,14 @@ function shortText(text: string, n = 140): string {
 }
 
 .outline-content {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: block;
   overflow: auto;
   flex: 1;
+  min-height: 0;
+}
+
+.outline-content > * + * {
+  margin-top: 6px;
 }
 
 .outline-meta {
