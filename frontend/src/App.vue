@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import ChatSidebar from '@/components/ChatSidebar.vue';
 import PdfUploader from '@/components/PdfUploader.vue';
 import ChatComposer from '@/components/ChatComposer.vue';
@@ -11,6 +11,7 @@ import type { OutlineResult, RagCorpusInfo } from '@/types';
 
 const store = useChatStore();
 
+const messagesEl = ref<HTMLDivElement | null>(null);
 const bridgeStatus = ref('正在检测桥接状态...');
 const availableProviders = ref<string[]>(['qwen', 'glm', 'deepseek']);
 const availableStrategies = ref<Array<'baseline' | 'few_shot' | 'cot_silent'>>(['baseline', 'few_shot', 'cot_silent']);
@@ -77,6 +78,17 @@ onMounted(async () => {
   }
 });
 
+watch(
+  () => activeSession.value?.messages.length,
+  () => {
+    nextTick(() => {
+      if (messagesEl.value) {
+        messagesEl.value.scrollTop = messagesEl.value.scrollHeight;
+      }
+    });
+  },
+);
+
 watch(isGenerating, (running) => {
   if (running) {
     generatingSeconds.value = 0;
@@ -107,6 +119,7 @@ onBeforeUnmount(() => {
       :active-session-id="store.activeSessionId"
       @create="store.createSession"
       @select="store.switchSession"
+      @delete="store.deleteSession"
     />
 
     <section class="main-panel">

@@ -12,6 +12,8 @@ export interface ChatMessage {
     schema?: 'on' | 'off';
     elapsedS?: number;
     rag?: RagResultMeta;
+    quality?: QualityMetrics;
+    version?: OutlineVersionMeta;
   };
 }
 
@@ -42,6 +44,14 @@ export interface RunOutlinePayload {
   ragMode?: RagMode;
 }
 
+export interface OutlineConflict {
+  type: string;
+  severity?: 'low' | 'medium' | 'high';
+  message: string;
+  sources?: string[];
+  signals?: string[];
+}
+
 export interface OutlineEvidence {
   text: string;
   source: string;
@@ -54,6 +64,7 @@ export interface OutlinePage {
   bullets: string[];
   notes: string;
   evidences?: OutlineEvidence[];
+  conflicts?: OutlineConflict[];
 }
 
 export type RagMode = 'vector' | 'bm25' | 'hybrid';
@@ -67,6 +78,7 @@ export interface RagPageMeta {
   confidence?: 'high' | 'medium' | 'low';
   used_source_ids?: number[];
   n_evidences?: number;
+  conflicts?: OutlineConflict[];
   error?: string;
 }
 
@@ -103,6 +115,33 @@ export interface OutlineResult {
   chapters: OutlineChapter[];
 }
 
+export interface QualityMetrics {
+  slide_count: number;
+  chapter_count: number;
+  avg_bullets_per_slide: number;
+  unique_slide_title_ratio: number;
+  granularity_score_0_100: number;
+  hierarchy_score_0_100: number;
+  coherence_score_0_100: number;
+  overall_score_0_100: number;
+}
+
+export interface OutlineVersionMeta {
+  versionId: string;
+  conversationId?: string;
+  createdAt: string;
+  sourceType: 'generated' | 'edited' | 'rag' | 'restored';
+  provider?: string;
+  strategy?: string;
+  schema?: 'on' | 'off';
+  useRag?: boolean;
+  summary: string;
+}
+
+export interface OutlineVersionDetail extends OutlineVersionMeta {
+  outline: OutlineResult;
+}
+
 export interface RunOutlineResponse {
   ok: boolean;
   error?: string;
@@ -112,6 +151,8 @@ export interface RunOutlineResponse {
   schema?: 'on' | 'off';
   outline?: OutlineResult;
   rag?: RagResultMeta;
+  quality?: QualityMetrics;
+  version?: OutlineVersionMeta;
 }
 
 export interface SaveOutlinePayload {
@@ -124,4 +165,43 @@ export interface SaveOutlineResponse {
   file?: string;
   relativePath?: string;
   error?: string;
+}
+
+export interface CreateVersionPayload {
+  conversationId?: string;
+  outline: OutlineResult;
+  sourceType?: 'generated' | 'edited' | 'rag' | 'restored';
+  provider?: string;
+  strategy?: string;
+  schemaMode?: 'on' | 'off';
+  useRag?: boolean;
+  summary?: string;
+}
+
+export interface VersionListResponse {
+  ok: boolean;
+  versions: OutlineVersionMeta[];
+  error?: string;
+}
+
+export interface VersionCreateResponse {
+  ok: boolean;
+  version?: OutlineVersionMeta;
+  error?: string;
+}
+
+export interface VersionRestoreResponse {
+  ok: boolean;
+  outline?: OutlineResult;
+  version?: OutlineVersionMeta;
+  error?: string;
+}
+
+export type ExportFormat = 'markdown' | 'html' | 'pptx' | 'json';
+
+export interface ExportOutlinePayload {
+  conversationId?: string;
+  outline: OutlineResult;
+  format: ExportFormat;
+  report?: Record<string, unknown>;
 }

@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - backend/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/rag/corpus:/app/backend/rag/corpus
+      - ./backend/rag/indexes:/app/backend/rag/indexes
+      - ./backend/outline/output:/app/backend/outline/output
+      - ./backend/outline/versions:/app/backend/outline/versions
+      - ./backend/outline/exports:/app/backend/outline/exports
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"

@@ -1,9 +1,14 @@
 import type {
+  CreateVersionPayload,
+  ExportOutlinePayload,
   RagCorpusInfo,
   RunOutlinePayload,
   RunOutlineResponse,
   SaveOutlinePayload,
   SaveOutlineResponse,
+  VersionCreateResponse,
+  VersionListResponse,
+  VersionRestoreResponse,
 } from '@/types';
 
 const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
@@ -21,6 +26,35 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   const data = (await response.json()) as T;
   return data;
+}
+
+async function requestBlob(path: string, init?: RequestInit): Promise<{ ok: boolean; blob?: Blob; fileName?: string; error?: string }> {
+  try {
+    const response = await fetch(`${apiBase}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers || {}),
+      },
+      ...init,
+    });
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok || contentType.includes('application/json')) {
+      const data = await response.json().catch(() => ({}));
+      return { ok: false, error: data.error || response.statusText };
+    }
+    const disposition = response.headers.get('content-disposition') || '';
+    const match = /filename="?([^"]+)"?/i.exec(disposition);
+    return {
+      ok: true,
+      blob: await response.blob(),
+      fileName: match?.[1],
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : serviceNotAvailableMessage,
+    };
+  }
 }
 
 export async function pingBridge() {
@@ -84,4 +118,53 @@ export async function saveOutline(payload: SaveOutlinePayload): Promise<SaveOutl
       error: error instanceof Error ? error.message : serviceNotAvailableMessage,
     };
   }
+}
+
+export async function createOutlineVersion(payload: CreateVersionPayload): Promise<VersionCreateResponse> {
+  try {
+    return await requestJson<VersionCreateResponse>('/outline/versions', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : serviceNotAvailableMessage,
+    };
+  }
+}
+
+export async function listOutlineVersions(conversationId: string): Promise<VersionListResponse> {
+  try {
+    return await requestJson<VersionListResponse>(`/outline/versions?conversationId=${encodeURIComponent(conversationId)}`, {
+      method: 'GET',
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      versions: [],
+      error: error instanceof Error ? error.message : serviceNotAvailableMessage,
+    };
+  }
+}
+
+export async function restoreOutlineVersion(versionId: string): Promise<VersionRestoreResponse> {
+  try {
+    return await requestJson<VersionRestoreResponse>(`/outline/versions/${encodeURIComponent(versionId)}/restore`, {
+      method: 'POST',
+      body: '{}',
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : serviceNotAvailableMessage,
+    };
+  }
+}
+
+export async function exportOutline(payload: ExportOutlinePayload) {
+  return requestBlob('/outline/export', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

@@ -85,6 +85,19 @@ export const useChatStore = defineStore('chat', () => {
     activeSessionId.value = sessionId;
   }
 
+  function deleteSession(sessionId: string) {
+    const index = sessions.value.findIndex((s) => s.id === sessionId);
+    if (index === -1) return;
+    sessions.value.splice(index, 1);
+    if (sessions.value.length === 0) {
+      const session = newSession();
+      sessions.value.push(session);
+    }
+    if (activeSessionId.value === sessionId) {
+      activeSessionId.value = sessions.value[0].id;
+    }
+  }
+
   function touchSession(session: ChatSession) {
     session.updatedAt = nowIso();
     if (session.messages.length > 1 && session.title === '新会话') {
@@ -152,6 +165,16 @@ export const useChatStore = defineStore('chat', () => {
     const page = outline?.chapters[chapterIndex]?.pages?.[pageIndex];
     if (!page) return;
     page.title = normalizeText(title, '未命名页面');
+    touchSession(session);
+  }
+
+  function updatePageNotes(chapterIndex: number, pageIndex: number, notes: string) {
+    const session = activeSession.value;
+    if (!session) return;
+    const outline = ensureEditableOutline(session);
+    const page = outline?.chapters[chapterIndex]?.pages?.[pageIndex];
+    if (!page) return;
+    page.notes = notes;
     touchSession(session);
   }
 
@@ -357,6 +380,8 @@ export const useChatStore = defineStore('chat', () => {
         schema: res.schema,
         elapsedS: res.elapsedS,
         rag: res.rag,
+        quality: res.quality,
+        version: res.version,
       },
     });
     setEditableOutline(res.outline);
@@ -377,12 +402,14 @@ export const useChatStore = defineStore('chat', () => {
     ragMode,
     createSession,
     switchSession,
+    deleteSession,
     setPdfContext,
     sendUserMessage,
     setEditableOutline,
     updateOutlineTitle,
     updateChapterTitle,
     updatePageTitle,
+    updatePageNotes,
     updateBulletText,
     addChapter,
     removeChapter,

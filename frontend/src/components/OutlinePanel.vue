@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { saveOutline } from '@/services/bridge';
+import {
+  createOutlineVersion,
+  exportOutline,
+  listOutlineVersions,
+  restoreOutlineVersion,
+  saveOutline,
+} from '@/services/bridge';
 import { useChatStore } from '@/stores/chat';
-import type { OutlinePage, OutlineResult } from '@/types';
+import type { ExportFormat, OutlinePage, OutlineResult, OutlineVersionMeta } from '@/types';
 import { exportOutlineMarkdown } from '@/utils/outlineExport';
 
 const props = defineProps<{
@@ -12,11 +18,34 @@ const props = defineProps<{
 const store = useChatStore();
 const isEditing = ref(false);
 const saving = ref(false);
+const exporting = ref<ExportFormat | ''>('');
 const saveStatus = ref('');
+const versionStatus = ref('');
+const versions = ref<OutlineVersionMeta[]>([]);
+const loadingVersions = ref(false);
 const canEdit = computed(() => !!props.outline);
 
 const expanded = ref<Record<number, boolean>>({});
 const evidenceOpen = ref<Record<string, boolean>>({});
+
+const latestMetadata = computed(() => {
+  const messages = store.activeSession.messages;
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    if (messages[i].outline) return messages[i].metadata;
+  }
+  return undefined;
+});
+
+const quality = computed(() => latestMetadata.value?.quality);
+const ragMeta = computed(() => latestMetadata.value?.rag);
+const ragStats = computed(() => {
+  const pages = ragMeta.value?.page_meta ?? [];
+  const ok = pages.filter((p) => p.enrichment === 'ok').length;
+  const low = pages.filter((p) => p.confidence === 'low').length;
+  const conflicts = pages.reduce((sum, p) => sum + (p.conflicts?.length ?? 0), 0);
+  const evidences = pages.reduce((sum, p) => sum + (p.n_evidences ?? 0), 0);
+  return { total: pages.length, ok, low, conflicts, evidences };
+});
 
 watch(
   () => props.outline,
@@ -36,8 +65,16 @@ watch(
     evidenceOpen.value = {};
     isEditing.value = false;
     saveStatus.value = '';
+    void refreshVersions();
   },
   { immediate: true },
+);
+
+watch(
+  () => store.activeSessionId,
+  () => {
+    void refreshVersions();
+  },
 );
 
 function toggle(index: number) {
@@ -78,6 +115,41 @@ function toggleEdit() {
   isEditing.value = !isEditing.value;
 }
 
+function buildAcceptanceReport() {
+  return {
+    provider: latestMetadata.value?.provider,
+    strategy: latestMetadata.value?.strategy,
+    schema: latestMetadata.value?.schema,
+    elapsedS: latestMetadata.value?.elapsedS,
+    rag: ragMeta.value,
+    quality: quality.value,
+    wbsRbsMapping: {
+      outlineGeneration: ['WBS 4.1-4.5', 'RBS Req2'],
+      ragCompletion: ['WBS 5.1-5.8', 'RBS Req3'],
+      contentIntegration: ['WBS 6.1-6.4', 'RBS Req4'],
+      qualityEvaluation: ['WBS 7.1-7.3', 'RBS Req5'],
+      exportDelivery: ['WBS 8.3-8.6', 'RBS Req6'],
+    },
+  };
+}
+
+function downloadBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function refreshVersions() {
+  loadingVersions.value = true;
+  const res = await listOutlineVersions(store.activeSessionId);
+  versions.value = res.ok ? res.versions : [];
+  if (!res.ok && res.error) versionStatus.value = `版本列表读取失败：${res.error}`;
+  loadingVersions.value = false;
+}
+
 async function onSave() {
   if (!props.outline || saving.value) return;
   saving.value = true;
@@ -88,6 +160,20 @@ async function onSave() {
   });
   if (res.ok) {
     saveStatus.value = res.file ? `已保存：${res.file}` : '已保存到后端';
+    const version = await createOutlineVersion({
+      conversationId: store.activeSessionId,
+      outline: props.outline,
+      sourceType: isEditing.value ? 'edited' : 'generated',
+      provider: latestMetadata.value?.provider,
+      strategy: latestMetadata.value?.strategy,
+      schemaMode: latestMetadata.value?.schema,
+      useRag: !!ragMeta.value?.used,
+      summary: isEditing.value ? 'Manual edited outline' : 'Saved outline',
+    });
+    if (version.ok) {
+      versionStatus.value = '已保存为历史版本';
+      await refreshVersions();
+    }
   } else {
     saveStatus.value = res.error ? `保存失败：${res.error}` : '保存失败';
   }
@@ -97,6 +183,39 @@ async function onSave() {
 function onExport() {
   if (!props.outline) return;
   exportOutlineMarkdown(props.outline);
+}
+
+async function onServerExport(format: ExportFormat) {
+  if (!props.outline || exporting.value) return;
+  exporting.value = format;
+  saveStatus.value = '';
+  const res = await exportOutline({
+    conversationId: store.activeSessionId,
+    outline: props.outline,
+    format,
+    report: buildAcceptanceReport(),
+  });
+  if (res.ok && res.blob) {
+    const fallback = `outline.${format === 'markdown' ? 'md' : format}`;
+    downloadBlob(res.blob, res.fileName || fallback);
+    saveStatus.value = `已导出 ${format.toUpperCase()}`;
+  } else {
+    saveStatus.value = res.error ? `导出失败：${res.error}` : '导出失败';
+  }
+  exporting.value = '';
+}
+
+async function onRestore(versionId: string) {
+  if (!versionId) return;
+  versionStatus.value = '正在恢复版本...';
+  const res = await restoreOutlineVersion(versionId);
+  if (res.ok && res.outline) {
+    store.setEditableOutline(res.outline);
+    versionStatus.value = `已恢复版本 ${versionId}`;
+    await refreshVersions();
+  } else {
+    versionStatus.value = res.error ? `恢复失败：${res.error}` : '恢复失败';
+  }
 }
 </script>
 
@@ -112,14 +231,15 @@ function onExport() {
           新增章节
         </button>
         <button type="button" class="ghost" :disabled="!canEdit" @click="onExport">
-          导出Markdown
+          本地Markdown
         </button>
         <button type="button" class="ghost" :disabled="!canEdit || saving" @click="onSave">
-          {{ saving ? '保存中...' : '保存JSON' }}
+          {{ saving ? '保存中...' : '保存版本' }}
         </button>
       </div>
     </div>
     <p v-if="saveStatus" class="outline-status">{{ saveStatus }}</p>
+    <p v-if="versionStatus" class="outline-status">{{ versionStatus }}</p>
 
     <div v-if="!outline" class="outline-empty">
       <div class="empty-icon">📋</div>
@@ -142,6 +262,41 @@ function onExport() {
         <span v-if="totalEvidences(outline) > 0" class="outline-rag-badge">
           🔗 {{ totalEvidences(outline) }} 条引证
         </span>
+      </div>
+
+      <div v-if="quality || ragMeta?.used" class="metrics-grid">
+        <div v-if="quality" class="metric-card">
+          <span>质量总分</span>
+          <strong>{{ quality.overall_score_0_100 }}</strong>
+          <small>层级 {{ quality.hierarchy_score_0_100 }} · 连贯 {{ quality.coherence_score_0_100 }}</small>
+        </div>
+        <div v-if="quality" class="metric-card">
+          <span>结构规模</span>
+          <strong>{{ quality.slide_count }}p</strong>
+          <small>{{ quality.chapter_count }} 章 · 平均 {{ quality.avg_bullets_per_slide }} 要点/页</small>
+        </div>
+        <div v-if="ragMeta?.used" class="metric-card">
+          <span>RAG 增强</span>
+          <strong>{{ ragStats.ok }}/{{ ragStats.total }}</strong>
+          <small>{{ ragStats.evidences }} 来源 · {{ ragStats.low }} 低置信 · {{ ragStats.conflicts }} 冲突</small>
+        </div>
+      </div>
+
+      <div v-if="canEdit" class="export-row">
+        <button type="button" class="ghost" :disabled="!!exporting" @click="onServerExport('markdown')">后端MD</button>
+        <button type="button" class="ghost" :disabled="!!exporting" @click="onServerExport('html')">HTML</button>
+        <button type="button" class="ghost" :disabled="!!exporting" @click="onServerExport('pptx')">PPTX</button>
+        <button type="button" class="ghost" :disabled="!!exporting" @click="onServerExport('json')">报告JSON</button>
+      </div>
+
+      <div v-if="versions.length || loadingVersions" class="version-box">
+        <div class="version-title">历史版本</div>
+        <select :disabled="loadingVersions" @change="onRestore(($event.target as HTMLSelectElement).value)">
+          <option value="">{{ loadingVersions ? '加载中...' : '选择版本恢复' }}</option>
+          <option v-for="v in versions" :key="v.versionId" :value="v.versionId">
+            {{ v.createdAt }} · {{ v.sourceType }} · {{ v.summary }}
+          </option>
+        </select>
       </div>
 
       <div v-if="outline.assumptions?.length" class="assumptions">
@@ -341,6 +496,21 @@ function onExport() {
                 + 新增要点
               </button>
 
+              <div v-if="isEditing || page.notes" class="page-notes-wrap">
+                <template v-if="isEditing">
+                  <textarea
+                    class="notes-input"
+                    rows="2"
+                    placeholder="备注（演讲者笔记）"
+                    :value="page.notes"
+                    @input="store.updatePageNotes(ci, pi, ($event.target as HTMLTextAreaElement).value)"
+                  ></textarea>
+                </template>
+                <template v-else>
+                  <blockquote class="page-notes-text">{{ page.notes }}</blockquote>
+                </template>
+              </div>
+
               <div v-if="pageHasEvidence(page)" class="page-evidences">
                 <button
                   class="ev-toggle"
@@ -361,6 +531,15 @@ function onExport() {
                     <div class="ev-text">{{ shortText(ev.text, 220) }}</div>
                   </li>
                 </ol>
+              </div>
+              <div v-if="page.conflicts?.length" class="conflict-box">
+                <strong>冲突提示</strong>
+                <ul>
+                  <li v-for="(conflict, ci2) in page.conflicts" :key="`${ci}-${pi}-conflict-${ci2}`">
+                    {{ conflict.message }}
+                    <span v-if="conflict.signals?.length">（信号：{{ conflict.signals.join(', ') }}）</span>
+                  </li>
+                </ul>
               </div>
             </div>
 
@@ -411,6 +590,67 @@ function onExport() {
   margin: 0;
   font-size: 12px;
   color: #2563eb;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metric-card {
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+  border-radius: 10px;
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-card span {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.metric-card strong {
+  font-size: 18px;
+  color: #1d4ed8;
+}
+
+.metric-card small {
+  font-size: 11px;
+  color: #475569;
+}
+
+.export-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.version-box {
+  border: 1px dashed #bfdbfe;
+  border-radius: 10px;
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f8fafc;
+}
+
+.version-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.version-box select {
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 7px 8px;
+  font: inherit;
+  font-size: 12px;
 }
 
 .ghost {
@@ -768,6 +1008,21 @@ function onExport() {
   padding-top: 4px;
 }
 
+.conflict-box {
+  margin-top: 8px;
+  border: 1px solid #fdba74;
+  background: #fff7ed;
+  color: #9a3412;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.conflict-box ul {
+  margin: 5px 0 0;
+  padding-left: 18px;
+}
+
 .ev-toggle {
   display: inline-flex;
   align-items: center;
@@ -864,5 +1119,31 @@ function onExport() {
 .slide-leave-from {
   max-height: 600px;
   opacity: 1;
+}
+
+.page-notes-wrap {
+  margin-top: 6px;
+}
+
+.notes-input {
+  width: 100%;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: #374151;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.page-notes-text {
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 3px solid #60a5fa;
+  background: #f0f9ff;
+  font-size: 12px;
+  color: #475569;
+  font-style: italic;
 }
 </style>
