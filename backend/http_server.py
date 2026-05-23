@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -693,6 +693,64 @@ def api_rag_corpus_build(request: CorpusBuildRequest) -> Dict[str, Any]:
             args.extend(["--model", request.model.strip()])
         code = build_index(args)
         return {"ok": code == 0, "corpusId": corpus_id, "exitCode": code}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+@app.post("/api/rag/upload")
+async def api_rag_upload(
+    corpusId: str = Form(...),
+    files: List[UploadFile] = File(...),
+) -> Dict[str, Any]:
+    """上传文件到语料库目录（不自动建索引）。"""
+    try:
+        corpus_id = _safe_token(corpusId)
+        if not corpus_id:
+            return {"ok": False, "error": "corpusId is required"}
+        dest_dir = BACKEND_ROOT / "rag" / "corpus" / corpus_id
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        saved: List[str] = []
+        for f in files:
+            filename = Path(f.filename or "upload").name
+            if not filename:
+                continue
+            dest = dest_dir / filename
+            content = await f.read()
+            dest.write_bytes(content)
+            saved.append(filename)
+        return {"ok": True, "corpusId": corpus_id, "saved": saved, "count": len(saved)}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+@app.get("/api/rag/corpora/{corpus_id}/files")
+def api_rag_corpus_files(corpus_id: str) -> Dict[str, Any]:
+    """列出语料库目录中的文件。"""
+    try:
+        src_dir = BACKEND_ROOT / "rag" / "corpus" / _safe_token(corpus_id)
+        if not src_dir.exists():
+            return {"ok": True, "files": []}
+        files = [
+            {"name": p.name, "size": p.stat().st_size}
+            for p in sorted(src_dir.iterdir())
+            if p.is_file()
+        ]
+        return {"ok": True, "files": files}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+@app.delete("/api/rag/corpora/{corpus_id}/files/{filename}")
+def api_rag_corpus_file_delete(corpus_id: str, filename: str) -> Dict[str, Any]:
+    """删除语料库目录中的单个文件。"""
+    try:
+        safe_id = _safe_token(corpus_id)
+        safe_name = Path(filename).name
+        path = BACKEND_ROOT / "rag" / "corpus" / safe_id / safe_name
+        if not path.exists():
+            return {"ok": False, "error": "file not found"}
+        path.unlink()
+        return {"ok": True}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc)}
 

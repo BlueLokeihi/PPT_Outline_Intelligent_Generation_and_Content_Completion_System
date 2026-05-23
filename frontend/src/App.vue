@@ -5,6 +5,7 @@ import PdfUploader from '@/components/PdfUploader.vue';
 import ChatComposer from '@/components/ChatComposer.vue';
 import RequirementsForm from '@/components/RequirementsForm.vue';
 import OutlinePanel from '@/components/OutlinePanel.vue';
+import CorpusManager from '@/components/CorpusManager.vue';
 import { getCorpora, getRuntimeInfo, pingBridge } from '@/services/bridge';
 import { useChatStore } from '@/stores/chat';
 import type { OutlineResult, RagCorpusInfo } from '@/types';
@@ -235,6 +236,7 @@ onBeforeUnmount(() => {
 
         <aside class="aux-panel">
           <PdfUploader @extracted="onPdfExtracted" />
+          <CorpusManager @corpora-updated="(list) => { availableCorpora = list; if (!store.corpusId && list.length > 0) store.corpusId = list[0].id; }" />
           <OutlinePanel :outline="editableOutline" />
         </aside>
       </div>

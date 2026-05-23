@@ -168,3 +168,67 @@ export async function exportOutline(payload: ExportOutlinePayload) {
     body: JSON.stringify(payload),
   });
 }
+
+export async function uploadCorpusFiles(
+  corpusId: string,
+  files: File[],
+): Promise<{ ok: boolean; corpusId?: string; saved?: string[]; count?: number; error?: string }> {
+  try {
+    const form = new FormData();
+    form.append('corpusId', corpusId);
+    for (const f of files) {
+      form.append('files', f);
+    }
+    const response = await fetch(`${apiBase}/rag/upload`, { method: 'POST', body: form });
+    return (await response.json()) as { ok: boolean; corpusId?: string; saved?: string[]; count?: number; error?: string };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : serviceNotAvailableMessage };
+  }
+}
+
+export async function buildCorpus(
+  corpusId: string,
+  options?: { provider?: string; model?: string; chunkSize?: number; overlap?: number },
+): Promise<{ ok: boolean; corpusId?: string; exitCode?: number; error?: string }> {
+  try {
+    return await requestJson<{ ok: boolean; corpusId?: string; exitCode?: number; error?: string }>('/rag/corpora/build', {
+      method: 'POST',
+      body: JSON.stringify({
+        corpusId,
+        provider: options?.provider ?? 'qwen',
+        model: options?.model ?? '',
+        chunkSize: options?.chunkSize ?? 500,
+        overlap: options?.overlap ?? 80,
+      }),
+    });
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : serviceNotAvailableMessage };
+  }
+}
+
+export async function listCorpusFiles(
+  corpusId: string,
+): Promise<{ ok: boolean; files: Array<{ name: string; size: number }>; error?: string }> {
+  try {
+    return await requestJson<{ ok: boolean; files: Array<{ name: string; size: number }>; error?: string }>(
+      `/rag/corpora/${encodeURIComponent(corpusId)}/files`,
+      { method: 'GET' },
+    );
+  } catch {
+    return { ok: false, files: [] };
+  }
+}
+
+export async function deleteCorpusFile(
+  corpusId: string,
+  filename: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    return await requestJson<{ ok: boolean; error?: string }>(
+      `/rag/corpora/${encodeURIComponent(corpusId)}/files/${encodeURIComponent(filename)}`,
+      { method: 'DELETE' },
+    );
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : serviceNotAvailableMessage };
+  }
+}
