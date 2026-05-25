@@ -1,6 +1,7 @@
 import type {
   CreateVersionPayload,
   ExportOutlinePayload,
+  QuestionnaireResponse,
   RagCorpusInfo,
   RunOutlinePayload,
   RunOutlineResponse,
@@ -54,6 +55,17 @@ async function requestBlob(path: string, init?: RequestInit): Promise<{ ok: bool
       ok: false,
       error: error instanceof Error ? error.message : serviceNotAvailableMessage,
     };
+  }
+}
+
+export async function requestQuestionnaire(topic: string, provider: string): Promise<QuestionnaireResponse> {
+  try {
+    return await requestJson<QuestionnaireResponse>('/questionnaire', {
+      method: 'POST',
+      body: JSON.stringify({ topic, provider }),
+    });
+  } catch {
+    return { ok: false, needs_questionnaire: false, questions: [] };
   }
 }
 

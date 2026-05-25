@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(python -c ' *)",
-      "Bash(conda run *)"
+      "Bash(conda run *)",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(conda env *)",
+      "PowerShell(Get-Process | Where-Object { $_.Id -eq 28116 })",
+      "Bash(npx vue-tsc *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":5173\")",
+      "Bash(findstr LISTENING)"
     ]
   }
 }

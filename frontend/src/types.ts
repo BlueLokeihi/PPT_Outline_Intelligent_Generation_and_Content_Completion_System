@@ -95,6 +95,35 @@ export interface RagResultMeta {
   error?: string;
 }
 
+// ── Questionnaire ──────────────────────────────────────────────────────
+export interface QuestionOption {
+  id: string;   // 'a' | 'b' | 'c'
+  label: string;
+}
+
+export interface QuestionItem {
+  id: string;
+  question: string;
+  options: QuestionOption[];
+  allow_custom: boolean;
+  allow_ai_decide: boolean;
+}
+
+export interface QuestionnaireAnswer {
+  questionId: string;
+  type: 'option' | 'custom' | 'ai_decide';
+  optionId?: string;
+  optionLabel?: string;
+  customText?: string;
+}
+
+export interface QuestionnaireResponse {
+  ok: boolean;
+  needs_questionnaire: boolean;
+  questions: QuestionItem[];
+  error?: string;
+}
+
 export interface RagCorpusInfo {
   id: string;
   size: number;
