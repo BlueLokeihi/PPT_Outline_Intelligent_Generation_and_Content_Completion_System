@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Literal, Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from llm.client import build_provider, load_models_config
@@ -941,7 +941,7 @@ def api_outline_export(request: OutlineExportRequest):
         path.write_text(_build_markdown(outline_payload, request.report), encoding="utf-8")
         return FileResponse(path, media_type="text/markdown; charset=utf-8", filename=path.name)
     except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": str(exc)}
+        return JSONResponse(status_code=500, content={"ok": False, "error": str(exc)})
 
 
 if __name__ == "__main__":

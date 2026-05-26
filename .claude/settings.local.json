@@ -9,7 +9,10 @@
       "Bash(npx vue-tsc *)",
       "Bash(netstat -ano)",
       "Bash(findstr \":5173\")",
-      "Bash(findstr LISTENING)"
+      "Bash(findstr LISTENING)",
+      "Bash(findstr \":8000\\\\|:5173\")",
+      "Bash(npm run *)",
+      "PowerShell(Start-Process -FilePath \"npm\" -ArgumentList \"run dev\" -WorkingDirectory \"F:\\\\PPT_Outline_Intelligent_Generation_and_Content_Completion_System\\\\frontend\" -WindowStyle Hidden -PassThru)"
     ]
   }
 }

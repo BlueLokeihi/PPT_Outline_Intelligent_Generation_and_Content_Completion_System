@@ -38,8 +38,7 @@ async function requestBlob(path: string, init?: RequestInit): Promise<{ ok: bool
       },
       ...init,
     });
-    const contentType = response.headers.get('content-type') || '';
-    if (!response.ok || contentType.includes('application/json')) {
+    if (!response.ok) {
       const data = await response.json().catch(() => ({}));
       return { ok: false, error: data.error || response.statusText };
     }

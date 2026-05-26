@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import {
   createOutlineVersion,
   exportOutline,
@@ -9,7 +9,6 @@ import {
 } from '@/services/bridge';
 import { useChatStore } from '@/stores/chat';
 import type { ExportFormat, OutlinePage, OutlineResult, OutlineVersionMeta } from '@/types';
-import { exportOutlineMarkdown } from '@/utils/outlineExport';
 
 const props = defineProps<{
   outline: OutlineResult | null;
@@ -22,8 +21,37 @@ const ragInline = ref(false);
 const versionsOpen = ref(false);
 const saving = ref(false);
 const exporting = ref<ExportFormat | ''>('');
+const exportMenuOpen = ref(false);
 const saveStatus = ref('');
 const versionStatus = ref('');
+
+function toggleExportMenu() {
+  exportMenuOpen.value = !exportMenuOpen.value;
+}
+
+function closeExportMenu() {
+  exportMenuOpen.value = false;
+}
+
+function onDocumentClick(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (!target.closest('.btn-iconic--menu')) {
+    exportMenuOpen.value = false;
+  }
+}
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocumentClick);
+});
+
+watch(exportMenuOpen, (open) => {
+  if (open) {
+    // nextTick not needed — add listener on next event cycle
+    setTimeout(() => document.addEventListener('click', onDocumentClick), 0);
+  } else {
+    document.removeEventListener('click', onDocumentClick);
+  }
+});
 const versions = ref<OutlineVersionMeta[]>([]);
 const loadingVersions = ref(false);
 const canEdit = computed(() => !!props.outline);
@@ -159,11 +187,6 @@ async function onSave() {
   saving.value = false;
 }
 
-function onExportLocal() {
-  if (!props.outline) return;
-  exportOutlineMarkdown(props.outline);
-}
-
 async function onServerExport(format: ExportFormat) {
   if (!props.outline || exporting.value) return;
   exporting.value = format;
@@ -230,15 +253,14 @@ async function onRestore(versionId: string) {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               <span>{{ saving ? '保存中…' : '保存' }}</span>
             </button>
-            <div class="btn-iconic btn-iconic--menu">
+            <div class="btn-iconic btn-iconic--menu" :class="{ 'is-open': exportMenuOpen }" @click.stop="toggleExportMenu">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span>导出</span>
-              <div class="btn-iconic__menu">
-                <button @click="onServerExport('markdown')">Markdown <span>.md</span></button>
-                <button @click="onServerExport('pptx')">PowerPoint <span>.pptx</span></button>
-                <button @click="onServerExport('html')">HTML <span>.html</span></button>
-                <button @click="onServerExport('json')">验收报告 <span>.json</span></button>
-                <button @click="onExportLocal()">本地 Markdown <span>.md</span></button>
+              <div v-if="exportMenuOpen" class="btn-iconic__menu" @click.stop>
+                <button @click="onServerExport('markdown'); closeExportMenu()">Markdown <span>.md</span></button>
+                <button @click="onServerExport('pptx'); closeExportMenu()">PowerPoint <span>.pptx</span></button>
+                <button @click="onServerExport('html'); closeExportMenu()">HTML <span>.html</span></button>
+                <button @click="onServerExport('json'); closeExportMenu()">JSON 数据 <span>.json</span></button>
               </div>
             </div>
           </div>
@@ -701,14 +723,13 @@ async function onRestore(versionId: string) {
 .btn-iconic:hover { background: var(--paper-3); color: var(--ink); border-color: var(--rule-strong); }
 .btn-iconic.is-active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .btn-iconic:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-iconic--menu { cursor: pointer; }
-.btn-iconic--menu:hover .btn-iconic__menu { display: flex; }
+.btn-iconic--menu { cursor: pointer; user-select: none; }
+.btn-iconic--menu.is-open { background: var(--paper-3); color: var(--ink); border-color: var(--rule-strong); }
 .btn-iconic__menu {
-  display: none;
+  display: flex;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 2px);
   right: 0;
-  margin-top: 4px;
   flex-direction: column;
   min-width: 200px;
   background: var(--paper);
@@ -716,7 +737,12 @@ async function onRestore(versionId: string) {
   border-radius: var(--r);
   box-shadow: var(--shadow);
   padding: 4px;
-  z-index: 20;
+  z-index: 50;
+  animation: menu-pop 0.1s ease;
+}
+@keyframes menu-pop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .btn-iconic__menu button {
   display: flex;
