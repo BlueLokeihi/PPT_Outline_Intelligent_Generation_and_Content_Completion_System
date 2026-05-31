@@ -67,6 +67,8 @@ class OutlineRequest(BaseModel):
     ragMaxSnippets: int = Field(default=8, ge=1, le=20)
     ragSkipLowConfidence: bool = False
     ragLowThreshold: float = Field(default=0.4, ge=0.0, le=1.0)
+    # 并发处理页数；默认 3，太高容易触发 provider QPS 限速
+    ragConcurrency: int = Field(default=3, ge=1, le=8)
 
 
 class OutlineSavePage(BaseModel):
@@ -502,13 +504,146 @@ def _detect_conflicts(evidences: List[Dict[str, Any]], confidence: str) -> List[
 
 # ---- RAG 管道（research + enrich，全在内存中流转） ------------------------
 
+def _process_rag_page(
+    *,
+    request: OutlineRequest,
+    outline: Dict[str, Any],
+    chapter: Dict[str, Any],
+    c_idx: int,
+    p_idx: int,
+    retriever: HybridRetriever,
+    embed_cfg: Optional[Any],
+    llm_client: Any,
+    llm_model: str,
+    overall_topic: str,
+) -> Dict[str, Any]:
+    """处理单页：research → (可选 skip) → enrich。
+
+    返回一个 dict：
+      {
+        "c_idx": ..., "p_idx": ...,
+        "page_meta": {...},                 # 写入 rag.page_meta 的条目
+        "page_updates": Optional[{...}],    # 命中成功时要写回 page 的字段
+      }
+    page_updates 为 None 表示不要改写原 page；否则其中包含 bullets/notes/evidences/conflicts。
+    """
+    pages = chapter.get("pages") or []
+    page = pages[p_idx]
+    page_title = str(page.get("title", ""))
+    ctx = page_context_from_outline(outline, c_idx, p_idx)
+
+    # ---- research：query 改写 + 多轮检索 ----
+    r = research_page(
+        ctx,
+        retriever=retriever,
+        embed_cfg=embed_cfg,
+        llm_client=llm_client,
+        llm_model=llm_model,
+        mode=request.ragMode,
+        k=6,
+        recall_k=20,
+        rrf_k=60,
+        rewrite_threshold=request.ragRewriteThreshold,
+        max_rounds=request.ragMaxRounds,
+        verbose=False,
+    )
+    if r.get("error"):
+        return {
+            "c_idx": c_idx, "p_idx": p_idx,
+            "page_meta": {
+                "chapter_idx": c_idx, "page_idx": p_idx,
+                "page_title": page_title,
+                "enrichment": "research_failed",
+                "error": r["error"],
+            },
+            "page_updates": None,
+        }
+
+    rounds = r.get("rounds") or []
+    coverage = float(rounds[-1].get("coverage") or 0.0) if rounds else 0.0
+    confidence = confidence_from_coverage(coverage)
+
+    # ---- 低置信度 skip ----
+    if request.ragSkipLowConfidence and coverage < request.ragLowThreshold:
+        return {
+            "c_idx": c_idx, "p_idx": p_idx,
+            "page_meta": {
+                "chapter_idx": c_idx, "page_idx": p_idx,
+                "page_title": page_title,
+                "enrichment": "skipped_low_confidence",
+                "coverage": round(coverage, 4),
+                "confidence": confidence,
+            },
+            "page_updates": None,
+        }
+
+    # ---- enrich：浓缩为 bullets+notes+evidences ----
+    snippets = snippets_from_research_chunks(r.get("final_chunks") or [])
+    er = enrich_page(
+        overall_topic=overall_topic,
+        chapter_title=str(chapter.get("title", "")),
+        page_title=page_title,
+        original_bullets=ctx.bullets,
+        original_notes=ctx.notes,
+        snippets=snippets,
+        coverage=coverage,
+        client=llm_client,
+        model=llm_model,
+        temperature=0.3,
+        max_snippets=request.ragMaxSnippets,
+    )
+    if er.error or not er.bullets:
+        return {
+            "c_idx": c_idx, "p_idx": p_idx,
+            "page_meta": {
+                "chapter_idx": c_idx, "page_idx": p_idx,
+                "page_title": page_title,
+                "enrichment": "failed",
+                "coverage": round(coverage, 4),
+                "confidence": confidence,
+                "error": er.error,
+            },
+            "page_updates": None,
+        }
+
+    updates: Dict[str, Any] = {
+        "bullets": er.bullets,
+        "notes": er.notes,
+    }
+    conflicts: List[Dict[str, Any]] = []
+    if er.evidences:
+        updates["evidences"] = er.evidences
+        conflicts = _detect_conflicts(er.evidences, confidence)
+        if conflicts:
+            updates["conflicts"] = conflicts
+
+    return {
+        "c_idx": c_idx, "p_idx": p_idx,
+        "page_meta": {
+            "chapter_idx": c_idx, "page_idx": p_idx,
+            "page_title": page_title,
+            "enrichment": "ok",
+            "coverage": round(coverage, 4),
+            "confidence": confidence,
+            "used_source_ids": er.used_source_ids,
+            "n_evidences": len(er.evidences),
+            "conflicts": conflicts,
+        },
+        "page_updates": updates,
+    }
+
+
 def _run_rag_pipeline(
     request: OutlineRequest, outline: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """跑 research + enrich，原地修改 outline（写回 evidences/bullets/notes）。
+    """跑 research + enrich（多页并发），写回 evidences/bullets/notes。
 
-    返回 rag meta：corpus、模型信息、各页 coverage/confidence/used_sources。
+    并发度由 request.ragConcurrency 控制（默认 3）。同一 page 的 research+enrich 仍是
+    顺序的（共一个 worker），但不同 page 并发；这样既缩短 wall time，也保证每页失败可
+    独立归因。
     """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     t_start = time.time()
     corpus_id = request.corpusId.strip()
     out_dir = corpus_path(corpus_id)
@@ -530,103 +665,84 @@ def _run_rag_pipeline(
 
     overall_topic = str(outline.get("title", ""))
     chapters = outline.get("chapters") or []
-    page_meta: List[Dict[str, Any]] = []
 
+    # —— 提交所有 page 任务到线程池 ——
+    tasks: List[tuple[int, int, Dict[str, Any]]] = []
     for c_idx, chapter in enumerate(chapters):
-        for p_idx, page in enumerate(chapter.get("pages") or []):
-            page_title = str(page.get("title", ""))
-            ctx = page_context_from_outline(outline, c_idx, p_idx)
+        for p_idx, _page in enumerate(chapter.get("pages") or []):
+            tasks.append((c_idx, p_idx, chapter))
 
-            # ---- research：query 改写 + 多轮检索 ----
-            r = research_page(
-                ctx,
+    concurrency = max(1, min(int(request.ragConcurrency), 8))
+    results_by_key: Dict[tuple[int, int], Dict[str, Any]] = {}
+
+    if not tasks:
+        return {
+            "used": True,
+            "corpus": corpus_id,
+            "mode": request.ragMode,
+            "embedding_model": manifest.get("embedding_model"),
+            "index_size": manifest.get("size"),
+            "rewrite_threshold": request.ragRewriteThreshold,
+            "max_rounds": request.ragMaxRounds,
+            "concurrency": concurrency,
+            "page_meta": [],
+            "elapsed_s": round(time.time() - t_start, 3),
+        }
+
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
+        futures = {
+            pool.submit(
+                _process_rag_page,
+                request=request,
+                outline=outline,
+                chapter=chapter,
+                c_idx=c_idx,
+                p_idx=p_idx,
                 retriever=retriever,
                 embed_cfg=embed_cfg,
                 llm_client=llm_client,
                 llm_model=llm_model,
-                mode=request.ragMode,
-                k=6,
-                recall_k=20,
-                rrf_k=60,
-                rewrite_threshold=request.ragRewriteThreshold,
-                max_rounds=request.ragMaxRounds,
-                verbose=False,
-            )
-            if r.get("error"):
-                page_meta.append({
-                    "chapter_idx": c_idx, "page_idx": p_idx,
-                    "page_title": page_title,
-                    "enrichment": "research_failed",
-                    "error": r["error"],
-                })
-                continue
-
-            rounds = r.get("rounds") or []
-            coverage = float(rounds[-1].get("coverage") or 0.0) if rounds else 0.0
-            confidence = confidence_from_coverage(coverage)
-
-            # ---- 低置信度 skip 选项 ----
-            if request.ragSkipLowConfidence and coverage < request.ragLowThreshold:
-                page_meta.append({
-                    "chapter_idx": c_idx, "page_idx": p_idx,
-                    "page_title": page_title,
-                    "enrichment": "skipped_low_confidence",
-                    "coverage": round(coverage, 4),
-                    "confidence": confidence,
-                })
-                continue
-
-            # ---- enrich：浓缩为 bullets+notes+evidences ----
-            snippets = snippets_from_research_chunks(r.get("final_chunks") or [])
-            er = enrich_page(
                 overall_topic=overall_topic,
-                chapter_title=str(chapter.get("title", "")),
-                page_title=page_title,
-                original_bullets=ctx.bullets,
-                original_notes=ctx.notes,
-                snippets=snippets,
-                coverage=coverage,
-                client=llm_client,
-                model=llm_model,
-                temperature=0.3,
-                max_snippets=request.ragMaxSnippets,
-            )
-            if er.error or not er.bullets:
-                page_meta.append({
-                    "chapter_idx": c_idx, "page_idx": p_idx,
-                    "page_title": page_title,
-                    "enrichment": "failed",
-                    "coverage": round(coverage, 4),
-                    "confidence": confidence,
-                    "error": er.error,
-                })
-                continue
+            ): (c_idx, p_idx)
+            for c_idx, p_idx, chapter in tasks
+        }
+        for fut in as_completed(futures):
+            key = futures[fut]
+            try:
+                results_by_key[key] = fut.result()
+            except Exception as exc:  # noqa: BLE001
+                c_idx, p_idx = key
+                results_by_key[key] = {
+                    "c_idx": c_idx, "p_idx": p_idx,
+                    "page_meta": {
+                        "chapter_idx": c_idx, "page_idx": p_idx,
+                        "page_title": "",
+                        "enrichment": "exception",
+                        "error": str(exc),
+                    },
+                    "page_updates": None,
+                }
 
-            # 写回 outline（原地修改）
-            page["bullets"] = er.bullets
-            page["notes"] = er.notes
-            if er.evidences:
-                page["evidences"] = er.evidences
-                conflicts = _detect_conflicts(er.evidences, confidence)
-                if conflicts:
-                    page["conflicts"] = conflicts
+    # —— 按 (c_idx, p_idx) 升序写回 outline + 组装 page_meta ——
+    page_meta: List[Dict[str, Any]] = []
+    for c_idx, chapter in enumerate(chapters):
+        for p_idx, page in enumerate(chapter.get("pages") or []):
+            entry = results_by_key.get((c_idx, p_idx))
+            if entry is None:
+                continue
+            updates = entry.get("page_updates")
+            if updates is not None:
+                page["bullets"] = updates["bullets"]
+                page["notes"] = updates["notes"]
+                if "evidences" in updates:
+                    page["evidences"] = updates["evidences"]
+                elif "evidences" in page:
+                    del page["evidences"]
+                if "conflicts" in updates:
+                    page["conflicts"] = updates["conflicts"]
                 elif "conflicts" in page:
                     del page["conflicts"]
-            elif "evidences" in page:
-                del page["evidences"]
-                if "conflicts" in page:
-                    del page["conflicts"]
-
-            page_meta.append({
-                "chapter_idx": c_idx, "page_idx": p_idx,
-                "page_title": page_title,
-                "enrichment": "ok",
-                "coverage": round(coverage, 4),
-                "confidence": confidence,
-                "used_source_ids": er.used_source_ids,
-                "n_evidences": len(er.evidences),
-                "conflicts": page.get("conflicts", []),
-            })
+            page_meta.append(entry["page_meta"])
 
     return {
         "used": True,
@@ -636,6 +752,7 @@ def _run_rag_pipeline(
         "index_size": manifest.get("size"),
         "rewrite_threshold": request.ragRewriteThreshold,
         "max_rounds": request.ragMaxRounds,
+        "concurrency": concurrency,
         "page_meta": page_meta,
         "elapsed_s": round(time.time() - t_start, 3),
     }
