@@ -95,6 +95,19 @@ export interface RagResultMeta {
   error?: string;
 }
 
+export interface RagCorpusSource {
+  id: string;
+  file_count: number;
+  total_bytes: number;
+  source_updated_at?: string;
+  has_index: boolean;
+  size?: number;
+  dim?: number;
+  embedding_model?: string;
+  built_at?: string;
+  has_bm25?: boolean;
+}
+
 // ── Questionnaire ──────────────────────────────────────────────────────
 export interface QuestionOption {
   id: string;   // 'a' | 'b' | 'c'

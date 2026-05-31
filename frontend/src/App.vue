@@ -5,9 +5,9 @@ import ChatComposer from '@/components/ChatComposer.vue';
 import RequirementsForm from '@/components/RequirementsForm.vue';
 import OutlinePanel from '@/components/OutlinePanel.vue';
 import DynamicQuestionnaire from '@/components/DynamicQuestionnaire.vue';
-import { getCorpora, getRuntimeInfo, pingBridge, requestQuestionnaire } from '@/services/bridge';
+import { getCorpusSources, getRuntimeInfo, pingBridge, requestQuestionnaire } from '@/services/bridge';
 import { useChatStore } from '@/stores/chat';
-import type { OutlineResult, QuestionItem, QuestionnaireAnswer, RagCorpusInfo } from '@/types';
+import type { OutlineResult, QuestionItem, QuestionnaireAnswer, RagCorpusInfo, RagCorpusSource } from '@/types';
 
 const store = useChatStore();
 
@@ -17,6 +17,7 @@ const bridgeMsg = ref('检测中…');
 const availableProviders = ref<string[]>(['qwen', 'glm', 'deepseek']);
 const availableStrategies = ref<Array<'baseline' | 'few_shot' | 'cot_silent'>>(['baseline', 'few_shot', 'cot_silent']);
 const availableCorpora = ref<RagCorpusInfo[]>([]);
+const availableSources = ref<RagCorpusSource[]>([]);
 const generatingSeconds = ref(0);
 const outlineVisible = ref(true);
 const viewMode = ref<'doc' | 'cards' | 'slides'>('doc');
@@ -46,6 +47,11 @@ const latestOutline = computed((): OutlineResult | null => {
 });
 
 const editableOutline = computed(() => activeSession.value?.editableOutline ?? latestOutline.value);
+const selectedCorpusNeedsBuild = computed(() => {
+  if (!store.corpusId) return false;
+  const found = availableSources.value.find((s) => s.id === store.corpusId);
+  return Boolean(found) && !found.has_index;
+});
 
 function roleLabel(role: string) {
   if (role === 'user') return '用户';
@@ -81,6 +87,26 @@ function onPdfExtracted(payload: { fileName: string; text: string; pageCount?: n
 function onCorporaUpdated(list: RagCorpusInfo[]) {
   availableCorpora.value = list;
   if (!store.corpusId && list.length > 0) store.corpusId = list[0].id;
+  refreshCorpusSources();
+}
+
+async function refreshCorpusSources() {
+  const res = await getCorpusSources();
+  if (res.ok) {
+    availableSources.value = res.sources;
+    const indexed = res.sources
+      .filter((s) => s.has_index)
+      .map((s) => ({
+        id: s.id,
+        size: s.size ?? 0,
+        dim: s.dim ?? 0,
+        embedding_model: s.embedding_model || 'unknown',
+        built_at: s.built_at || '',
+        has_bm25: Boolean(s.has_bm25),
+      }));
+    availableCorpora.value = indexed;
+    if (!store.corpusId && indexed.length > 0) store.corpusId = indexed[0].id;
+  }
 }
 
 async function onFormSubmit(text: string, minSlides: number, maxSlides: number) {
@@ -141,7 +167,7 @@ async function onSend(text: string) {
 }
 
 onMounted(async () => {
-  const [ping, runtime, corpora] = await Promise.all([pingBridge(), getRuntimeInfo(), getCorpora()]);
+  const [ping, runtime, sources] = await Promise.all([pingBridge(), getRuntimeInfo(), getCorpusSources()]);
   bridgeOk.value = ping.ok;
   bridgeMsg.value = ping.ok ? '已连接' : '未连接';
 
@@ -160,9 +186,20 @@ onMounted(async () => {
     }
   }
 
-  if (corpora.ok && corpora.corpora.length > 0) {
-    availableCorpora.value = corpora.corpora;
-    if (!store.corpusId) store.corpusId = corpora.corpora[0].id;
+  if (sources.ok) {
+    availableSources.value = sources.sources;
+    const indexed = sources.sources
+      .filter((s) => s.has_index)
+      .map((s) => ({
+        id: s.id,
+        size: s.size ?? 0,
+        dim: s.dim ?? 0,
+        embedding_model: s.embedding_model || 'unknown',
+        built_at: s.built_at || '',
+        has_bm25: Boolean(s.has_bm25),
+      }));
+    availableCorpora.value = indexed;
+    if (!store.corpusId && indexed.length > 0) store.corpusId = indexed[0].id;
   }
 });
 
@@ -250,6 +287,7 @@ onBeforeUnmount(() => {
               <option v-if="availableCorpora.length === 0" value="">(无知识库)</option>
               <option v-for="c in availableCorpora" :key="c.id" :value="c.id">{{ c.id }}</option>
             </select>
+            <span v-if="selectedCorpusNeedsBuild" class="topbar__badge topbar__badge--warn">需重建索引</span>
             <select class="topbar__select" v-model="store.ragMode">
               <option value="hybrid">hybrid</option>
               <option value="vector">vector</option>

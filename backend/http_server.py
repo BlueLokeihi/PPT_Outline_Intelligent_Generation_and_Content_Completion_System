@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import time
 import uuid
 from dataclasses import asdict
@@ -35,6 +36,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BACKEND_ROOT = PROJECT_ROOT / "backend"
 MODELS_CONFIG = BACKEND_ROOT / "config" / "models.json"
 ENV_FILE = BACKEND_ROOT / ".env"
+ALLOWED_CORPUS_EXTS = {".pdf", ".txt", ".md"}
 
 # 自动加载 .env 文件
 if ENV_FILE.exists():
@@ -119,6 +121,11 @@ class CorpusBuildRequest(BaseModel):
     model: str = ""
     chunkSize: int = Field(default=500, ge=100, le=2000)
     overlap: int = Field(default=80, ge=0, le=500)
+
+
+class CorpusRenameRequest(BaseModel):
+    corpusId: str
+    newCorpusId: str
 
 
 class QuestionnaireRequest(BaseModel):
@@ -296,6 +303,34 @@ def _safe_token(value: Optional[str]) -> str:
         return "session"
     token = re.sub(r"[^a-zA-Z0-9_-]+", "_", value).strip("_")
     return token[:48] or "session"
+
+
+def _invalidate_corpus_index(corpus_id: str) -> bool:
+    index_dir = BACKEND_ROOT / "rag" / "indexes" / corpus_id
+    if not index_dir.exists():
+        return False
+    shutil.rmtree(index_dir, ignore_errors=True)
+    return True
+
+
+def _scan_corpus_dir(root: Path) -> tuple[int, int, float]:
+    file_count = 0
+    total_bytes = 0
+    latest_mtime = 0.0
+    for p in root.rglob("*"):
+        if not p.is_file():
+            continue
+        stat = p.stat()
+        file_count += 1
+        total_bytes += stat.st_size
+        latest_mtime = max(latest_mtime, stat.st_mtime)
+    return file_count, total_bytes, latest_mtime
+
+
+def _format_ts(ts: float) -> str:
+    if ts <= 0:
+        return ""
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts))
 
 
 def _versions_root(conversation_id: Optional[str]) -> Path:
@@ -838,6 +873,41 @@ def api_rag_corpora() -> Dict[str, Any]:
     return {"ok": True, "corpora": items}
 
 
+@app.get("/api/rag/corpus-sources")
+def api_rag_corpus_sources() -> Dict[str, Any]:
+    """列出 corpus 目录中的知识库来源（含是否已建索引）。"""
+    base = BACKEND_ROOT / "rag" / "corpus"
+    if not base.exists():
+        return {"ok": True, "sources": []}
+    items: List[Dict[str, Any]] = []
+    for d in sorted(base.iterdir()):
+        if not d.is_dir():
+            continue
+        file_count, total_bytes, latest_mtime = _scan_corpus_dir(d)
+        index_dir = BACKEND_ROOT / "rag" / "indexes" / d.name
+        manifest_path = index_dir / "manifest.json"
+        manifest: Dict[str, Any] = {}
+        has_index = manifest_path.exists()
+        if has_index:
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            except Exception:
+                manifest = {}
+        items.append({
+            "id": d.name,
+            "file_count": file_count,
+            "total_bytes": total_bytes,
+            "source_updated_at": _format_ts(latest_mtime),
+            "has_index": has_index,
+            "size": manifest.get("size") if has_index else None,
+            "dim": manifest.get("dim") if has_index else None,
+            "embedding_model": manifest.get("embedding_model") if has_index else "",
+            "built_at": manifest.get("built_at") if has_index else "",
+            "has_bm25": (index_dir / "tokens.jsonl").exists() if has_index else False,
+        })
+    return {"ok": True, "sources": items}
+
+
 @app.post("/api/rag/corpora/build")
 def api_rag_corpus_build(request: CorpusBuildRequest) -> Dict[str, Any]:
     try:
@@ -860,6 +930,41 @@ def api_rag_corpus_build(request: CorpusBuildRequest) -> Dict[str, Any]:
         return {"ok": False, "error": str(exc)}
 
 
+@app.post("/api/rag/corpora/rename")
+def api_rag_corpus_rename(request: CorpusRenameRequest) -> Dict[str, Any]:
+    try:
+        src_raw = request.corpusId.strip()
+        dst_raw = request.newCorpusId.strip()
+        if not src_raw or not dst_raw:
+            return {"ok": False, "error": "corpusId and newCorpusId are required"}
+        safe_src = _safe_token(src_raw)
+        safe_dst = _safe_token(dst_raw)
+        if safe_dst != dst_raw:
+            return {"ok": False, "error": "newCorpusId must use letters, numbers, underscore, or hyphen"}
+        if safe_src == safe_dst:
+            return {"ok": False, "error": "newCorpusId must be different"}
+
+        src_dir = BACKEND_ROOT / "rag" / "corpus" / safe_src
+        dst_dir = BACKEND_ROOT / "rag" / "corpus" / safe_dst
+        if not src_dir.exists():
+            return {"ok": False, "error": f"corpus not found: {safe_src}"}
+        if dst_dir.exists():
+            return {"ok": False, "error": f"corpus already exists: {safe_dst}"}
+
+        src_index = BACKEND_ROOT / "rag" / "indexes" / safe_src
+        dst_index = BACKEND_ROOT / "rag" / "indexes" / safe_dst
+        if dst_index.exists():
+            return {"ok": False, "error": f"index already exists for target: {safe_dst}"}
+
+        shutil.move(str(src_dir), str(dst_dir))
+        if src_index.exists():
+            shutil.move(str(src_index), str(dst_index))
+
+        return {"ok": True, "corpusId": safe_src, "newCorpusId": safe_dst}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
 @app.post("/api/rag/upload")
 async def api_rag_upload(
     corpusId: str = Form(...),
@@ -870,6 +975,17 @@ async def api_rag_upload(
         corpus_id = _safe_token(corpusId)
         if not corpus_id:
             return {"ok": False, "error": "corpusId is required"}
+        invalid: List[str] = []
+        for f in files:
+            filename = Path(f.filename or "").name
+            if not filename:
+                invalid.append("(empty)")
+                continue
+            if Path(filename).suffix.lower() not in ALLOWED_CORPUS_EXTS:
+                invalid.append(filename)
+        if invalid:
+            allowed = ", ".join(sorted(ALLOWED_CORPUS_EXTS))
+            return {"ok": False, "error": f"不支持的文件类型: {', '.join(invalid)}（仅支持 {allowed}）"}
         dest_dir = BACKEND_ROOT / "rag" / "corpus" / corpus_id
         dest_dir.mkdir(parents=True, exist_ok=True)
         saved: List[str] = []
@@ -881,7 +997,14 @@ async def api_rag_upload(
             content = await f.read()
             dest.write_bytes(content)
             saved.append(filename)
-        return {"ok": True, "corpusId": corpus_id, "saved": saved, "count": len(saved)}
+        invalidated = _invalidate_corpus_index(corpus_id)
+        return {
+            "ok": True,
+            "corpusId": corpus_id,
+            "saved": saved,
+            "count": len(saved),
+            "indexInvalidated": invalidated,
+        }
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc)}
 
@@ -913,6 +1036,25 @@ def api_rag_corpus_file_delete(corpus_id: str, filename: str) -> Dict[str, Any]:
         if not path.exists():
             return {"ok": False, "error": "file not found"}
         path.unlink()
+        invalidated = _invalidate_corpus_index(safe_id)
+        return {"ok": True, "indexInvalidated": invalidated}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+@app.delete("/api/rag/corpora/{corpus_id}")
+def api_rag_corpus_delete(corpus_id: str) -> Dict[str, Any]:
+    """删除整个语料库（含索引）。"""
+    try:
+        safe_id = _safe_token(corpus_id)
+        corpus_dir = BACKEND_ROOT / "rag" / "corpus" / safe_id
+        index_dir = BACKEND_ROOT / "rag" / "indexes" / safe_id
+        if not corpus_dir.exists() and not index_dir.exists():
+            return {"ok": False, "error": "corpus not found"}
+        if corpus_dir.exists():
+            shutil.rmtree(corpus_dir, ignore_errors=True)
+        if index_dir.exists():
+            shutil.rmtree(index_dir, ignore_errors=True)
         return {"ok": True}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc)}

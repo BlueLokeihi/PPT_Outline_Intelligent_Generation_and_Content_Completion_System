@@ -3,6 +3,7 @@ import type {
   ExportOutlinePayload,
   QuestionnaireResponse,
   RagCorpusInfo,
+  RagCorpusSource,
   RunOutlinePayload,
   RunOutlineResponse,
   SaveOutlinePayload,
@@ -117,6 +118,16 @@ export async function getCorpora(): Promise<{ ok: boolean; corpora: RagCorpusInf
   }
 }
 
+export async function getCorpusSources(): Promise<{ ok: boolean; sources: RagCorpusSource[] }> {
+  try {
+    return await requestJson<{ ok: boolean; sources: RagCorpusSource[] }>('/rag/corpus-sources', {
+      method: 'GET',
+    });
+  } catch {
+    return { ok: false, sources: [] };
+  }
+}
+
 export async function saveOutline(payload: SaveOutlinePayload): Promise<SaveOutlineResponse> {
   try {
     return await requestJson<SaveOutlineResponse>('/outline/save', {
@@ -183,7 +194,7 @@ export async function exportOutline(payload: ExportOutlinePayload) {
 export async function uploadCorpusFiles(
   corpusId: string,
   files: File[],
-): Promise<{ ok: boolean; corpusId?: string; saved?: string[]; count?: number; error?: string }> {
+): Promise<{ ok: boolean; corpusId?: string; saved?: string[]; count?: number; indexInvalidated?: boolean; error?: string }> {
   try {
     const form = new FormData();
     form.append('corpusId', corpusId);
@@ -191,7 +202,7 @@ export async function uploadCorpusFiles(
       form.append('files', f);
     }
     const response = await fetch(`${apiBase}/rag/upload`, { method: 'POST', body: form });
-    return (await response.json()) as { ok: boolean; corpusId?: string; saved?: string[]; count?: number; error?: string };
+    return (await response.json()) as { ok: boolean; corpusId?: string; saved?: string[]; count?: number; indexInvalidated?: boolean; error?: string };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : serviceNotAvailableMessage };
   }
@@ -233,10 +244,35 @@ export async function listCorpusFiles(
 export async function deleteCorpusFile(
   corpusId: string,
   filename: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; indexInvalidated?: boolean; error?: string }> {
+  try {
+    return await requestJson<{ ok: boolean; indexInvalidated?: boolean; error?: string }>(
+      `/rag/corpora/${encodeURIComponent(corpusId)}/files/${encodeURIComponent(filename)}`,
+      { method: 'DELETE' },
+    );
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : serviceNotAvailableMessage };
+  }
+}
+
+export async function renameCorpus(
+  corpusId: string,
+  newCorpusId: string,
+): Promise<{ ok: boolean; corpusId?: string; newCorpusId?: string; error?: string }> {
+  try {
+    return await requestJson<{ ok: boolean; corpusId?: string; newCorpusId?: string; error?: string }>(
+      '/rag/corpora/rename',
+      { method: 'POST', body: JSON.stringify({ corpusId, newCorpusId }) },
+    );
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : serviceNotAvailableMessage };
+  }
+}
+
+export async function deleteCorpus(corpusId: string): Promise<{ ok: boolean; error?: string }> {
   try {
     return await requestJson<{ ok: boolean; error?: string }>(
-      `/rag/corpora/${encodeURIComponent(corpusId)}/files/${encodeURIComponent(filename)}`,
+      `/rag/corpora/${encodeURIComponent(corpusId)}`,
       { method: 'DELETE' },
     );
   } catch (error) {
