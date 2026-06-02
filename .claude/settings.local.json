@@ -12,7 +12,13 @@
       "Bash(findstr LISTENING)",
       "Bash(findstr \":8000\\\\|:5173\")",
       "Bash(npm run *)",
-      "PowerShell(Start-Process -FilePath \"npm\" -ArgumentList \"run dev\" -WorkingDirectory \"F:\\\\PPT_Outline_Intelligent_Generation_and_Content_Completion_System\\\\frontend\" -WindowStyle Hidden -PassThru)"
+      "PowerShell(Start-Process -FilePath \"npm\" -ArgumentList \"run dev\" -WorkingDirectory \"F:\\\\PPT_Outline_Intelligent_Generation_and_Content_Completion_System\\\\frontend\" -WindowStyle Hidden -PassThru)",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs -I{} taskkill /PID {} /F)",
+      "Bash(git show *)",
+      "Bash(npm install *)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/ping -H \"Content-Type: application/json\" -d \"{}\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/questionnaire -H \"Content-Type: application/json\" -d \"{\\\\\"topic\\\\\":\\\\\"请为以下演示文稿生成PPT大纲：\\\\\\\\n【主题】AI技术汇报\\\\\\\\n【使用场景】学术报告\\\\\\\\n【受众对象】学生\\\\\\\\n【目标结果】信息传递\\\\\\\\n【页数范围】10-18 页\\\\\\\\n【表达风格】正式严谨\\\\\\\\n【信息深度】详细\\\\\", \\\\\"provider\\\\\":\\\\\"deepseek\\\\\"}\")"
     ]
   }
 }

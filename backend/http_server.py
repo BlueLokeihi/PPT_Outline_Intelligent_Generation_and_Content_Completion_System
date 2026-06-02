@@ -135,14 +135,18 @@ class QuestionnaireRequest(BaseModel):
 
 _QUESTIONNAIRE_SYSTEM = (
     "你是PPT大纲生成助手的前置问卷模块。\n\n"
-    "任务：分析用户PPT需求，判断是否需要2-3个选择题来明确方向；"
-    "主题已足够具体则无需提问。\n\n"
-    "每题给出3个有实质区别的选项（15字以内），全部使用中文。\n\n"
+    "用户已通过表单提供了场景、受众、目标、风格、深度等基本参数。"
+    "你的任务是：在此基础上，针对该主题进一步挖掘内容层面的细节，"
+    "提出2-3个能显著影响大纲结构与内容深度的选择题。\n\n"
+    "提问原则：\n"
+    "- 不要重复表单已有的字段（场景/受众/风格/深度等）\n"
+    "- 聚焦于内容本身：核心论点侧重、数据与案例的使用方式、叙事结构、需要重点攻克的难点等\n"
+    "- 每题给出3个有实质区别的选项（15字以内），全部使用中文\n"
+    "- 必须始终输出问题，needs_questionnaire 始终为 true\n\n"
     "严格返回JSON，不含其他文字：\n"
     '{"needs_questionnaire":true,"questions":['
     '{"id":"q1","question":"...","options":[{"id":"a","label":"..."},{"id":"b","label":"..."},{"id":"c","label":"..."}],'
-    '"allow_custom":true,"allow_ai_decide":true}]}\n'
-    "或：{\"needs_questionnaire\":false,\"questions\":[]}"
+    '"allow_custom":true,"allow_ai_decide":true}]}'
 )
 
 
@@ -799,28 +803,33 @@ def api_ping() -> Dict[str, Any]:
 
 
 @app.post("/api/questionnaire")
-def api_questionnaire(req: QuestionnaireRequest) -> Dict[str, Any]:
+async def api_questionnaire(req: QuestionnaireRequest) -> Dict[str, Any]:
     """Generate clarifying questions for a PPT topic using LLM."""
     try:
         provider = req.provider.strip() or "qwen"
-        client, model, _defaults, _ = build_provider(provider, config_path=str(MODELS_CONFIG))
+        client, model, defaults, _ = build_provider(provider, config_path=str(MODELS_CONFIG))
 
-        response = client.chat.completions.create(
+        # 直接 await client.chat() — 避免在 uvicorn event loop 中嵌套 asyncio.run()
+        resp = await client.chat(
             model=model,
             messages=[
                 {"role": "system", "content": _QUESTIONNAIRE_SYSTEM},
                 {"role": "user", "content": f"用户PPT需求：{req.topic}"},
             ],
             temperature=0.3,
+            top_p=defaults.top_p,
             max_tokens=800,
         )
-        raw = (response.choices[0].message.content or "").strip()
+        raw = str(resp.choices[0].message.content or "").strip()
 
         # Extract JSON from response
         json_match = re.search(r"\{.*\}", raw, re.DOTALL)
         if json_match:
             data = json.loads(json_match.group())
-            return {"ok": True, "needs_questionnaire": bool(data.get("needs_questionnaire")), "questions": data.get("questions") or []}
+            questions = data.get("questions") or []
+            # 强制触发：只要 LLM 生成了有效问题就弹出问卷，不依赖 LLM 自报 needs_questionnaire
+            if questions:
+                return {"ok": True, "needs_questionnaire": True, "questions": questions}
         return {"ok": True, "needs_questionnaire": False, "questions": []}
     except Exception as exc:  # noqa: BLE001
         return {"ok": True, "needs_questionnaire": False, "questions": [], "error": str(exc)}

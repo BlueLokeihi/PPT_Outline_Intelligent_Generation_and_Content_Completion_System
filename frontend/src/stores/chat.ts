@@ -103,7 +103,11 @@ export const useChatStore = defineStore('chat', () => {
     if (session.messages.length > 1 && session.title === '新会话') {
       const firstUser = session.messages.find((m) => m.role === 'user');
       if (firstUser) {
-        session.title = firstUser.text.slice(0, 18);
+        // 优先从结构化 prompt 中提取【主题】，否则取前 20 字
+        const topicMatch = firstUser.text.match(/【主题】(.+)/);
+        session.title = topicMatch
+          ? topicMatch[1].trim().slice(0, 20)
+          : firstUser.text.slice(0, 20);
       }
     }
   }
@@ -421,4 +425,32 @@ export const useChatStore = defineStore('chat', () => {
     removeBullet,
     moveBullet,
   };
+}, {
+  persist: {
+    // 只持久化这些 key
+    pick: ['sessions', 'activeSessionId', 'provider', 'strategy', 'schema',
+           'minSlides', 'maxSlides', 'useRag', 'corpusId', 'ragMode'],
+    serializer: {
+      // 序列化时把 pdfText 清空（可能很大，避免撑爆 localStorage）
+      serialize: (state) => {
+        const s = state as Record<string, unknown>;
+        const cleanSessions = (s.sessions as ChatSession[] ?? []).map((sess) => ({
+          ...sess,
+          pdfText: '',   // 不持久化 PDF 原文
+          pdfName: sess.pdfName,  // 保留文件名，提示用户曾上传过
+        }));
+        return JSON.stringify({ ...s, sessions: cleanSessions });
+      },
+      // 反序列化时修复卡住的运行状态
+      deserialize: (val) => {
+        const state = JSON.parse(val) as Record<string, unknown>;
+        const fixed = (state.sessions as ChatSession[] ?? []).map((sess) => ({
+          ...sess,
+          status: 'idle' as const,
+          lastError: '',
+        }));
+        return { ...state, sessions: fixed };
+      },
+    },
+  },
 });
