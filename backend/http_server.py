@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import re
 import shutil
@@ -71,6 +72,9 @@ class OutlineRequest(BaseModel):
     ragLowThreshold: float = Field(default=0.4, ge=0.0, le=1.0)
     # 并发处理页数；默认 3，太高容易触发 provider QPS 限速
     ragConcurrency: int = Field(default=3, ge=1, le=8)
+    # 额外上下文
+    fileSources: List[FileSourceItem] = Field(default_factory=list)
+    webResults: List[WebResultItem] = Field(default_factory=list)
 
 
 class OutlineSavePage(BaseModel):
@@ -133,6 +137,22 @@ class QuestionnaireRequest(BaseModel):
     provider: str = "qwen"
 
 
+class WebSearchRequest(BaseModel):
+    query: str
+    maxResults: int = Field(default=8, ge=1, le=20)
+
+
+class FileSourceItem(BaseModel):
+    name: str = ""
+    text: str = ""
+
+
+class WebResultItem(BaseModel):
+    title: str = ""
+    url: str = ""
+    snippet: str = ""
+
+
 _QUESTIONNAIRE_SYSTEM = (
     "你是PPT大纲生成助手的前置问卷模块。\n\n"
     "用户已通过表单提供了场景、受众、目标、风格、深度等基本参数。"
@@ -161,12 +181,35 @@ app.add_middleware(
 )
 
 
-def compose_topic_text(messages: List[MessageItem], pdf_text: str) -> str:
+def compose_topic_text(
+    messages: List[MessageItem],
+    pdf_text: str,
+    file_sources: Optional[List[Dict[str, str]]] = None,
+    web_results: Optional[List[Dict[str, str]]] = None,
+) -> str:
     lines: List[str] = ["你将基于以下对话与资料生成 PPT 大纲。"]
 
     if pdf_text.strip():
         lines.append("\n[PDF资料摘录]\n")
         lines.append(pdf_text.strip())
+
+    if file_sources:
+        for fs in file_sources:
+            name = fs.get("name", "附件")
+            text = (fs.get("text") or "").strip()
+            if text:
+                lines.append(f"\n[参考资料：{name}]\n")
+                lines.append(text[:8000])
+
+    if web_results:
+        lines.append("\n[网络搜索结果]\n")
+        for i, r in enumerate(web_results[:8], 1):
+            title = r.get("title", "")
+            url = r.get("url", "")
+            snippet = r.get("snippet", "")
+            lines.append(f"{i}. 【{title}】")
+            lines.append(f"   来源：{url}")
+            lines.append(f"   摘要：{snippet}")
 
     lines.append("\n[多轮对话]\n")
     for item in messages:
@@ -188,7 +231,12 @@ def run_outline(request: OutlineRequest) -> Dict[str, Any]:
     if min_slides > max_slides:
         min_slides, max_slides = max_slides, min_slides
 
-    topic_text = compose_topic_text(messages=request.messages, pdf_text=request.pdfText)
+    topic_text = compose_topic_text(
+        messages=request.messages,
+        pdf_text=request.pdfText,
+        file_sources=[{"name": fs.name, "text": fs.text} for fs in request.fileSources],
+        web_results=[{"title": r.title, "url": r.url, "snippet": r.snippet} for r in request.webResults],
+    )
     topic_text = maybe_truncate(topic_text, max_chars=24000)
 
     client, model, defaults, _provider_cfg = build_provider(provider, config_path=str(MODELS_CONFIG))
@@ -833,6 +881,141 @@ async def api_questionnaire(req: QuestionnaireRequest) -> Dict[str, Any]:
         return {"ok": True, "needs_questionnaire": False, "questions": []}
     except Exception as exc:  # noqa: BLE001
         return {"ok": True, "needs_questionnaire": False, "questions": [], "error": str(exc)}
+
+
+def _search_jina(query: str, max_results: int) -> List[Dict[str, str]]:
+    """Jina Search (s.jina.ai)。主引擎，无需 Key 亦可用，配置 JINA_API_KEY 额度更高。"""
+    import os
+    import urllib.parse
+    import requests as _req
+
+    encoded = urllib.parse.quote(query, safe="")
+    url = f"https://s.jina.ai/{encoded}"
+    headers: Dict[str, str] = {"Accept": "application/json", "X-Retain-Images": "none"}
+    api_key = os.getenv("JINA_API_KEY", "").strip()
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    resp = _req.get(url, headers=headers, timeout=20)
+    resp.raise_for_status()
+    data = resp.json()
+
+    results: List[Dict[str, str]] = []
+    for item in (data.get("data") or [])[:max_results]:
+        snippet = (item.get("description") or item.get("content") or "").strip()
+        results.append({
+            "title": (item.get("title") or "").strip(),
+            "url":   (item.get("url")   or "").strip(),
+            "snippet": snippet[:240] + ("…" if len(snippet) > 240 else ""),
+        })
+    return results
+
+
+def _search_serp(query: str, max_results: int) -> List[Dict[str, str]]:
+    """SerpAPI (Google)。兜底引擎，Free Plan 250次/月。"""
+    import os
+    import requests as _req
+
+    api_key = os.getenv("SERP_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("SERP_API_KEY 未配置")
+
+    params = {
+        "q": query,
+        "api_key": api_key,
+        "engine": "google",
+        "num": max_results,
+        "hl": "zh-cn",
+        "gl": "cn",
+    }
+    resp = _req.get("https://serpapi.com/search.json", params=params, timeout=20)
+    resp.raise_for_status()
+    data = resp.json()
+
+    results: List[Dict[str, str]] = []
+    for item in (data.get("organic_results") or [])[:max_results]:
+        snippet = (item.get("snippet") or "").strip()
+        results.append({
+            "title": (item.get("title") or "").strip(),
+            "url":   (item.get("link")  or "").strip(),
+            "snippet": snippet[:240] + ("…" if len(snippet) > 240 else ""),
+        })
+    return results
+
+
+@app.post("/api/search/web")
+async def api_web_search(req: WebSearchRequest) -> Dict[str, Any]:
+    """双引擎搜索：Jina 优先，失败时自动切换 SerpAPI 兜底。"""
+    import asyncio as _asyncio
+
+    def _search() -> Dict[str, Any]:
+        # ── 主引擎：Jina ──
+        try:
+            results = _search_jina(req.query, req.maxResults)
+            if results:
+                return {"ok": True, "results": results, "engine": "jina"}
+        except Exception as jina_exc:  # noqa: BLE001
+            jina_err = str(jina_exc)
+        else:
+            jina_err = "Jina 返回空结果"
+
+        # ── 兜底：SerpAPI ──
+        try:
+            results = _search_serp(req.query, req.maxResults)
+            if results:
+                return {"ok": True, "results": results, "engine": "serp"}
+        except Exception:  # noqa: BLE001
+            pass
+
+        return {"ok": False, "results": [], "error": "两个搜索引擎均不可用，请稍后重试", "jina_error": jina_err}
+
+    try:
+        loop = _asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, _search)
+        return result
+    except Exception:  # noqa: BLE001
+        return {"ok": False, "results": [], "error": "搜索服务暂时不可用，请稍后重试或手动上传文件"}
+
+
+@app.post("/api/extract/docx")
+async def api_extract_docx(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """提取 Word (.docx) 文件文本。"""
+    try:
+        import docx  # python-docx
+        content = await file.read()
+        doc = docx.Document(io.BytesIO(content))
+        paragraphs = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+        # Also extract table text
+        for table in doc.tables:
+            for row in table.rows:
+                cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                if cells:
+                    paragraphs.append(" | ".join(cells))
+        text = "\n".join(paragraphs)
+        return {"ok": True, "text": text, "fileName": file.filename, "charCount": len(text)}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+@app.post("/api/extract/pptx")
+async def api_extract_pptx(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """提取 PowerPoint (.pptx) 文件文本。"""
+    try:
+        from pptx import Presentation
+        content = await file.read()
+        prs = Presentation(io.BytesIO(content))
+        texts: List[str] = []
+        for slide_idx, slide in enumerate(prs.slides, 1):
+            slide_texts = []
+            for shape in slide.shapes:
+                if hasattr(shape, "text") and shape.text.strip():
+                    slide_texts.append(shape.text.strip())
+            if slide_texts:
+                texts.append(f"[幻灯片 {slide_idx}]\n" + "\n".join(slide_texts))
+        text = "\n\n".join(texts)
+        return {"ok": True, "text": text, "fileName": file.filename, "charCount": len(text)}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
 
 
 @app.get("/api/runtime-info")

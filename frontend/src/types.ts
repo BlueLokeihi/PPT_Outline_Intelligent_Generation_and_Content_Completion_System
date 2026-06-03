@@ -1,4 +1,27 @@
-export type MessageRole = 'system' | 'user' | 'assistant';
+export type MessageRole = 'system' | 'user' | 'assistant' | 'tool';
+
+// ── File & Web Sources ─────────────────────────────────────────────────────
+export interface FileSource {
+  id: string;
+  name: string;
+  type: 'pdf' | 'docx' | 'pptx' | 'txt' | 'md';
+  text: string;
+  size: number;
+  addedAt: string;
+}
+
+export interface WebSearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+export interface WebSource {
+  id: string;
+  query: string;
+  results: WebSearchResult[];
+  addedAt: string;
+}
 
 export interface ChatMessage {
   id: string;
@@ -6,6 +29,13 @@ export interface ChatMessage {
   text: string;
   createdAt: string;
   outline?: OutlineResult;
+  // For tool messages (web search display)
+  webSearch?: {
+    query: string;
+    results: WebSearchResult[];
+    status: 'searching' | 'done' | 'error';
+    error?: string;
+  };
   metadata?: {
     provider?: string;
     strategy?: string;
@@ -14,20 +44,31 @@ export interface ChatMessage {
     rag?: RagResultMeta;
     quality?: QualityMetrics;
     version?: OutlineVersionMeta;
+    // Sources used at generation time
+    sources?: {
+      files?: Array<{ name: string; type: string }>;
+      webSearches?: Array<{ query: string; resultCount: number }>;
+      rag?: { corpus: string; mode: string } | null;
+    };
   };
 }
 
 export interface ChatSession {
   id: string;
   title: string;
+  topic: string;
   createdAt: string;
   updatedAt: string;
   messages: ChatMessage[];
   pdfText: string;
   pdfName: string;
+  fileSources: FileSource[];
+  webSources: WebSource[];
   editableOutline?: OutlineResult;
   status: 'idle' | 'running' | 'error';
   lastError: string;
+  // Pending initial message from HomeView form (processed by ProjectView on mount)
+  pendingFirstMessage?: string;
 }
 
 export interface RunOutlinePayload {
@@ -42,6 +83,8 @@ export interface RunOutlinePayload {
   useRag?: boolean;
   corpusId?: string;
   ragMode?: RagMode;
+  fileSources?: Array<{ name: string; text: string }>;
+  webResults?: WebSearchResult[];
 }
 
 export interface OutlineConflict {

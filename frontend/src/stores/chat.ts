@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { runOutline } from '@/services/bridge';
-import type { ChatMessage, ChatSession, OutlineResult, RagMode, RunOutlineResponse } from '@/types';
+import type { ChatMessage, ChatSession, FileSource, OutlineResult, RagMode, RunOutlineResponse, WebSearchResult, WebSource } from '@/types';
 
 function createId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -35,23 +35,19 @@ function findLatestOutline(messages: ChatMessage[]): OutlineResult | null {
   return null;
 }
 
-function newSession(title = '新会话'): ChatSession {
+function newSession(title = '新会话', topic = ''): ChatSession {
   const ts = nowIso();
   return {
     id: createId(),
     title,
+    topic,
     createdAt: ts,
     updatedAt: ts,
-    messages: [
-      {
-        id: createId(),
-        role: 'system',
-        text: '你可以上传PDF并发起多轮需求调整。当前会话会保留历史消息。',
-        createdAt: ts,
-      },
-    ],
+    messages: [],
     pdfText: '',
     pdfName: '',
+    fileSources: [],
+    webSources: [],
     status: 'idle',
     lastError: '',
   };
@@ -100,15 +96,64 @@ export const useChatStore = defineStore('chat', () => {
 
   function touchSession(session: ChatSession) {
     session.updatedAt = nowIso();
-    if (session.messages.length > 1 && session.title === '新会话') {
+    if (session.messages.some((m) => m.role === 'user') && session.title === '新会话') {
       const firstUser = session.messages.find((m) => m.role === 'user');
       if (firstUser) {
-        // 优先从结构化 prompt 中提取【主题】，否则取前 20 字
         const topicMatch = firstUser.text.match(/【主题】(.+)/);
-        session.title = topicMatch
+        const derived = topicMatch
           ? topicMatch[1].trim().slice(0, 20)
           : firstUser.text.slice(0, 20);
+        session.title = derived;
+        if (!session.topic) {
+          session.topic = topicMatch ? topicMatch[1].trim() : firstUser.text.slice(0, 60);
+        }
       }
+    }
+  }
+
+  function addFileSource(sessionId: string, source: FileSource) {
+    const session = sessions.value.find((s) => s.id === sessionId);
+    if (!session) return;
+    if (!session.fileSources) session.fileSources = [];
+    // Remove same-name if exists
+    session.fileSources = session.fileSources.filter((f) => f.name !== source.name);
+    session.fileSources.push(source);
+    touchSession(session);
+  }
+
+  function removeFileSource(sessionId: string, sourceId: string) {
+    const session = sessions.value.find((s) => s.id === sessionId);
+    if (!session) return;
+    session.fileSources = (session.fileSources ?? []).filter((f) => f.id !== sourceId);
+    touchSession(session);
+  }
+
+  function addWebSource(sessionId: string, source: WebSource) {
+    const session = sessions.value.find((s) => s.id === sessionId);
+    if (!session) return;
+    if (!session.webSources) session.webSources = [];
+    session.webSources.push(source);
+    touchSession(session);
+  }
+
+  function upsertToolMessage(
+    sessionId: string,
+    messageId: string,
+    patch: Partial<ChatMessage>,
+  ) {
+    const session = sessions.value.find((s) => s.id === sessionId);
+    if (!session) return;
+    const idx = session.messages.findIndex((m) => m.id === messageId);
+    if (idx >= 0) {
+      session.messages[idx] = { ...session.messages[idx], ...patch };
+    } else {
+      session.messages.push({
+        id: messageId,
+        role: 'tool',
+        text: '',
+        createdAt: nowIso(),
+        ...patch,
+      });
     }
   }
 
@@ -319,7 +364,17 @@ export const useChatStore = defineStore('chat', () => {
     });
   }
 
-  async function sendUserMessage(text: string) {
+  async function sendUserMessage(
+    text: string,
+    opts?: {
+      webResults?: WebSearchResult[];
+      sourcesMeta?: {
+        files?: Array<{ name: string; type: string }>;
+        webSearches?: Array<{ query: string; resultCount: number }>;
+        rag?: { corpus: string; mode: string } | null;
+      };
+    },
+  ) {
     const session = activeSession.value;
     if (!session || !text.trim()) {
       return;
@@ -337,7 +392,7 @@ export const useChatStore = defineStore('chat', () => {
       conversationId: session.id,
       messages: session.messages
         .filter((m) => m.role === 'user' || m.role === 'assistant')
-        .map((m) => ({ role: m.role, text: m.text })),
+        .map((m) => ({ role: m.role as 'user' | 'assistant', text: m.text })),
       pdfText: session.pdfText,
       provider: provider.value,
       strategy: strategy.value,
@@ -347,6 +402,8 @@ export const useChatStore = defineStore('chat', () => {
       useRag: useRag.value && !!corpusId.value,
       corpusId: corpusId.value,
       ragMode: ragMode.value,
+      fileSources: (session.fileSources ?? []).map((f) => ({ name: f.name, text: f.text })),
+      webResults: opts?.webResults ?? [],
     };
 
     const res: RunOutlineResponse = await runOutline(payload);
@@ -386,6 +443,7 @@ export const useChatStore = defineStore('chat', () => {
         rag: res.rag,
         quality: res.quality,
         version: res.version,
+        sources: opts?.sourcesMeta,
       },
     });
     setEditableOutline(res.outline);
@@ -424,6 +482,11 @@ export const useChatStore = defineStore('chat', () => {
     addBullet,
     removeBullet,
     moveBullet,
+    addFileSource,
+    removeFileSource,
+    addWebSource,
+    upsertToolMessage,
+    newSession,
   };
 }, {
   persist: {

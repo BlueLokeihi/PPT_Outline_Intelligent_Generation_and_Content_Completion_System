@@ -157,10 +157,18 @@ function downloadBlob(blob: Blob, fileName: string) {
 
 async function refreshVersions() {
   loadingVersions.value = true;
-  const res = await listOutlineVersions(store.activeSessionId);
-  versions.value = res.ok ? res.versions : [];
-  if (!res.ok && res.error) versionStatus.value = `版本列表读取失败：${res.error}`;
-  loadingVersions.value = false;
+  try {
+    const res = await listOutlineVersions(store.activeSessionId);
+    versions.value = res.ok ? res.versions : [];
+    // Silently ignore "Failed to fetch" (connectivity issue) — don't alarm user
+    if (!res.ok && res.error && !res.error.includes('Failed to fetch') && !res.error.includes('fetch')) {
+      versionStatus.value = `版本列表读取失败：${res.error}`;
+    }
+  } catch {
+    // Network unavailable — silent
+  } finally {
+    loadingVersions.value = false;
+  }
 }
 
 async function onSave() {
@@ -287,7 +295,7 @@ async function onRestore(versionId: string) {
             <div class="stat__k">冲突</div>
           </div>
           <div class="stat stat--quality">
-            <svg class="qring" width="40" height="40" viewBox="0 0 40 40">
+            <svg class="qring" width="32" height="32" viewBox="0 0 40 40">
               <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-opacity="0.12" stroke-width="3" />
               <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="3"
                 stroke-linecap="round"
@@ -777,33 +785,35 @@ async function onRestore(versionId: string) {
 
 /* ── STATS GRID ── */
 .outline-head__stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  display: flex;
   gap: 0;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: var(--paper);
   border: 1px solid var(--rule);
   border-radius: var(--r);
   margin-bottom: 12px;
+  overflow: hidden;
 }
 .stat {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 0 10px;
+  padding: 0 8px;
   border-right: 1px solid var(--rule);
   min-width: 0;
+  flex: 1;
 }
 .stat:last-child { border-right: 0; }
 .stat--quality {
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border-right: 0;
+  flex: 0 0 auto;
 }
 .stat__v {
   font-family: var(--f-serif);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--ink);
   line-height: 1;

@@ -78,6 +78,7 @@ async function handleUpload() {
     return;
   }
 
+  buildStatus.value = '';  // clear stale build messages
   isUploading.value = true;
   uploadStatus.value = `上传中（${selectedFiles.value.length} 个文件）...`;
   try {
@@ -105,15 +106,41 @@ async function handleBuild() {
     buildStatus.value = '请先输入知识库名称。';
     return;
   }
+  uploadStatus.value = '';
+  buildStatus.value = '';
+
+  // ── 如果还有未上传的文件，先自动上传 ──
+  if (selectedFiles.value.length > 0) {
+    isUploading.value = true;
+    buildStatus.value = `第 1/2 步：上传 ${selectedFiles.value.length} 个文件…`;
+    try {
+      const upRes = await uploadCorpusFiles(id, selectedFiles.value);
+      if (!upRes.ok) {
+        buildStatus.value = `上传失败：${upRes.error}`;
+        isUploading.value = false;
+        return;
+      }
+      selectedFiles.value = [];
+      if (fileInputEl.value) fileInputEl.value.value = '';
+    } catch (e) {
+      buildStatus.value = `上传失败：${e instanceof Error ? e.message : '未知错误'}`;
+      isUploading.value = false;
+      return;
+    } finally {
+      isUploading.value = false;
+    }
+  }
+
+  // ── 构建索引 ──
   isBuilding.value = true;
-  buildStatus.value = '正在构建向量索引，请稍候（可能需要数分钟）...';
+  buildStatus.value = '第 2/2 步：正在构建向量索引，请稍候（可能需要数分钟）…';
   try {
     const res = await buildCorpus(id, {
       provider: buildProvider.value,
       chunkSize: buildChunkSize.value,
     });
     if (res.ok) {
-      buildStatus.value = `索引构建成功（exitCode=${res.exitCode}）。`;
+      buildStatus.value = `✓ 索引构建成功（exitCode=${res.exitCode}）`;
       await refreshCorpora();
     } else {
       buildStatus.value = `构建失败：${res.error}`;
@@ -274,8 +301,6 @@ watch(isOpen, (open) => {
           Embedding provider
           <select v-model="buildProvider" class="mini-select">
             <option value="qwen">qwen</option>
-            <option value="deepseek">deepseek</option>
-            <option value="glm">glm</option>
           </select>
         </label>
 
@@ -290,10 +315,11 @@ watch(isOpen, (open) => {
           :disabled="isUploading || isBuilding"
           @click="handleBuild"
         >
-          {{ isBuilding ? '构建中...' : '构建索引' }}
+          {{ isBuilding ? '构建中…' : isUploading ? '上传中…' : selectedFiles.length > 0 ? '上传并构建索引' : '构建索引' }}
         </button>
       </div>
 
+      <p class="step-hint">① 输入名称 → ② 选择文件 → ③ 点「构建索引」（会自动先上传再构建）</p>
       <p v-if="uploadStatus" class="status-text">{{ uploadStatus }}</p>
       <p v-if="buildStatus" class="status-text" :class="{ error: buildStatus.startsWith('构建失败') }">
         {{ buildStatus }}
@@ -440,7 +466,10 @@ watch(isOpen, (open) => {
 }
 .num-input { width: 62px; }
 
-.status-text { font-size: 11.5px; color: var(--accent); margin: 0; font-family: var(--f-mono); }
+.status-text {
+  font-size: 11.5px; color: var(--accent); margin: 0; font-family: var(--f-mono);
+  word-break: break-all; overflow-wrap: break-word; white-space: pre-wrap;
+}
 .status-text.error { color: var(--danger); }
 
 .corpus-list { border-top: 1px solid var(--rule); padding-top: 8px; }
@@ -501,4 +530,9 @@ watch(isOpen, (open) => {
 .del-btn:hover { background: rgba(185,28,28,.07); }
 
 .subtle { font-size: 11px; color: var(--ink-4); margin: 0; font-style: italic; }
+.step-hint {
+  font-size: 10.5px; color: var(--ink-4); margin: 0;
+  background: var(--paper-3); border-radius: 5px;
+  padding: 4px 8px; font-family: var(--f-mono);
+}
 </style>

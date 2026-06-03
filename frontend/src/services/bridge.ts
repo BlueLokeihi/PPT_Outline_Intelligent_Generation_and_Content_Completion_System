@@ -11,6 +11,7 @@ import type {
   VersionCreateResponse,
   VersionListResponse,
   VersionRestoreResponse,
+  WebSearchResult,
 } from '@/types';
 
 const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
@@ -279,3 +280,36 @@ export async function deleteCorpus(corpusId: string): Promise<{ ok: boolean; err
     return { ok: false, error: error instanceof Error ? error.message : serviceNotAvailableMessage };
   }
 }
+
+// ── Web Search ─────────────────────────────────────────────────────────────
+export async function searchWeb(
+  query: string,
+  maxResults = 8,
+): Promise<{ ok: boolean; results: WebSearchResult[]; error?: string }> {
+  try {
+    return await requestJson<{ ok: boolean; results: WebSearchResult[]; error?: string }>(
+      '/search/web',
+      { method: 'POST', body: JSON.stringify({ query, maxResults }) },
+    );
+  } catch (error) {
+    return { ok: false, results: [], error: error instanceof Error ? error.message : serviceNotAvailableMessage };
+  }
+}
+
+// ── File Text Extraction ───────────────────────────────────────────────────
+async function _extractFile(
+  endpoint: string,
+  file: File,
+): Promise<{ ok: boolean; text?: string; fileName?: string; charCount?: number; error?: string }> {
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    const response = await fetch(`${apiBase}${endpoint}`, { method: 'POST', body: form });
+    return await response.json();
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : serviceNotAvailableMessage };
+  }
+}
+
+export async function extractDocx(file: File) { return _extractFile('/extract/docx', file); }
+export async function extractPptx(file: File) { return _extractFile('/extract/pptx', file); }
