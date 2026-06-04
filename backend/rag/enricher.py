@@ -108,7 +108,8 @@ def _build_prompt(
         "- 输出 3-6 条 bullets，每条 ≤ 30 字（中文），优先保留可验证的数字、专有名词、年份、来源\n"
         "- 输出 notes，≤ 200 字，给演讲者讲解参考（背景说明、过渡语、案例提示均可）\n"
         "- bullets 与 notes 的事实必须有依据（来自上面片段或与原 bullets 一致）；不要凭空编造数字\n"
-        "- 用 used_sources 数组报告你引用的片段编号（1-based 整数）；未使用任何片段则给空数组 []\n\n"
+        "- 用 used_sources 数组报告你引用的片段编号（1-based 整数）；只要参考了外部知识片段，就必须列出对应编号\n"
+        "- 若外部片段与页面主题明显无关，才允许 used_sources 为空数组 []\n\n"
         '严格 JSON 格式：{"bullets":["..."], "notes":"...", "used_sources":[1,3,...]}\n'
     )
     return [
@@ -169,20 +170,10 @@ def _parse(
             seen.add(i)
             used_ids.append(i)
 
-    evidences: List[Dict[str, Any]] = []
-    for i in used_ids:
-        s = snippets[i - 1]
-        ev_text = s.text.strip().replace("\n", " ")
-        if len(ev_text) > 400:
-            ev_text = ev_text[:400] + "..."
-        evidences.append(
-            {
-                "text": ev_text,
-                "source": s.source,
-                "score": float(s.score),
-                "chunk_index": int(s.chunk_index),
-            }
-        )
+    if not used_ids and snippets:
+        used_ids = _fallback_source_ids(snippets)
+
+    evidences = _build_evidences(used_ids, snippets, auto_selected=not bool(used_raw))
 
     return EnrichResult(
         bullets=bullets,
@@ -192,6 +183,41 @@ def _parse(
         confidence=confidence,
         raw_text=raw,
     )
+
+
+def _fallback_source_ids(snippets: List[RetrievedSnippet], *, max_ids: int = 2) -> List[int]:
+    """When the model omits citations, keep traceability via top retrieved chunks."""
+    out: List[int] = []
+    for idx, snippet in enumerate(snippets, 1):
+        if snippet.text.strip() and snippet.score > 0:
+            out.append(idx)
+        if len(out) >= max_ids:
+            break
+    return out
+
+
+def _build_evidences(
+    used_ids: List[int],
+    snippets: List[RetrievedSnippet],
+    *,
+    auto_selected: bool = False,
+) -> List[Dict[str, Any]]:
+    evidences: List[Dict[str, Any]] = []
+    for i in used_ids:
+        s = snippets[i - 1]
+        ev_text = s.text.strip().replace("\n", " ")
+        if len(ev_text) > 400:
+            ev_text = ev_text[:400] + "..."
+        evidence: Dict[str, Any] = {
+            "text": ev_text,
+            "source": s.source,
+            "score": float(s.score),
+            "chunk_index": int(s.chunk_index),
+        }
+        if auto_selected:
+            evidence["auto_selected"] = True
+        evidences.append(evidence)
+    return evidences
 
 
 # ---- 公共入口 -------------------------------------------------------------
