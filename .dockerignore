@@ -1,0 +1,33 @@
+.git
+.gitignore
+.dockerignore
+.vscode
+.claude
+
+# Python caches and local virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Frontend local/build artifacts
+frontend/node_modules/
+frontend/dist/
+
+# Local secrets
+backend/.env
+
+# Runtime data mounted by docker-compose
+backend/logs/
+backend/rag/cache/
+backend/rag/corpus/
+backend/rag/indexes/
+backend/outline/output/
+backend/outline/versions/
+backend/outline/exports/
+
+# Large/local generated files
+*.log

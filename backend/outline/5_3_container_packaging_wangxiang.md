@@ -100,3 +100,15 @@ docker compose up --build
 - 大模型 API 依赖外部网络，容器启动成功不等于模型调用一定成功。
 - 首次构建需要拉取基础镜像和安装依赖，耗时取决于网络环境。
 - 如需离线演示，应提前构建镜像并缓存 Python、Node 依赖。
+
+## 复查与补充记录（2026-06-14）
+
+本次复查发现并补充了以下容器化交付细节：
+
+1. 后端容器监听地址已由 `127.0.0.1` 调整为 `0.0.0.0`，确保容器内 FastAPI 服务可以通过宿主机端口映射访问。
+2. `docker-compose.yml` 已补充挂载 `backend/logs`，用于持久化 API 使用监控统计文件 `api_usage_metrics.json`。
+3. `docker-compose.yml` 已补充挂载 `backend/rag/cache`，避免 Embedding 缓存随容器重建丢失。
+4. 新增 `.dockerignore`，排除 `.env`、`node_modules`、`dist`、RAG 语料/索引、输出文件、日志和缓存，降低镜像体积并避免把本地密钥和运行数据复制进镜像。
+5. `.gitignore` 已补充 `backend/.env` 和 `backend/logs/`，防止后续误提交本地密钥和运行日志。
+
+复查后，容器化打包不再只是基础启动配置，也覆盖了运行数据持久化、构建上下文控制和容器网络可访问性。

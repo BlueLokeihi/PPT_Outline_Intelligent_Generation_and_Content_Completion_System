@@ -9,7 +9,9 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/rag/corpus:/app/backend/rag/corpus
+      - ./backend/rag/cache:/app/backend/rag/cache
       - ./backend/rag/indexes:/app/backend/rag/indexes
+      - ./backend/logs:/app/backend/logs
       - ./backend/outline/output:/app/backend/outline/output
       - ./backend/outline/versions:/app/backend/outline/versions
       - ./backend/outline/exports:/app/backend/outline/exports

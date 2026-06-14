@@ -43,6 +43,8 @@ npm run dev
 - `GET /api/outline/versions/{versionId}`
 - `POST /api/outline/versions/{versionId}/restore`
 - `POST /api/outline/export`
+- `GET /api/monitoring/usage`
+- `POST /api/monitoring/reset`
 
 ## Docker Run
 
@@ -54,3 +56,5 @@ docker compose up --build
 
 Frontend: `http://localhost:5173`
 Backend: `http://localhost:8000`
+
+Runtime data is mounted back to the host for RAG corpora/indexes/cache, outline output/version/export files, and API monitoring logs.
