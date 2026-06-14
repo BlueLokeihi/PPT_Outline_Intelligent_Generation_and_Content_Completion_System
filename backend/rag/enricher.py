@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional
 from liter_llm import LlmClient
 
 from llm.client import chat_text_sync
+from monitoring import user_facing_error
 from outline.json_extract import extract_first_json_object
 
 
@@ -242,6 +243,7 @@ def enrich_page(
     coverage: float,
     client: LlmClient,
     model: str,
+    provider: str = "",
     temperature: float = 0.3,
     top_p: float = 0.9,
     max_tokens: int = 1024,
@@ -269,11 +271,13 @@ def enrich_page(
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
+            provider=provider,
+            operation="rag_enrich",
         )
     except Exception as e:
         return EnrichResult(
             bullets=[], notes="", used_source_ids=[], evidences=[],
-            confidence=confidence, raw_text="", error=str(e)
+            confidence=confidence, raw_text="", error=user_facing_error(e, api_type="llm")
         )
     return _parse(raw, snips, confidence=confidence)
 

@@ -176,6 +176,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 coverage=coverage,
                 client=llm_client,
                 model=llm_model,
+                provider=args.provider,
                 temperature=args.temperature,
                 snippet_max_chars=args.snippet_chars,
                 max_snippets=args.max_snippets,

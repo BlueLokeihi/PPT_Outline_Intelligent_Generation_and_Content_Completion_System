@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 from liter_llm import LlmClient
 
 from llm.client import chat_text_sync
+from monitoring import user_facing_error
 
 from .json_extract import extract_first_json_object
 from .schema import validate_outline
@@ -47,6 +48,8 @@ def generate_once(
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
+            provider=provider,
+            operation="outline_generate",
         )
     except Exception as e:
         return GenerateResult(
@@ -54,7 +57,7 @@ def generate_once(
             strategy=strategy,
             enforce_schema=enforce_schema,
             ok=False,
-            error=str(e),
+            error=user_facing_error(e, api_type="llm"),
             elapsed_s=time.time() - start,
             raw_text="",
         )

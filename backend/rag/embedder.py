@@ -18,6 +18,7 @@ import numpy as np
 from liter_llm import LlmClient
 
 from llm.client import load_models_config
+from monitoring import record_api_call_async
 
 
 DEFAULT_EMBEDDING = {
@@ -30,6 +31,7 @@ DEFAULT_EMBEDDING = {
 
 @dataclass
 class EmbedConfig:
+    provider: str
     api_key: str
     base_url: str
     model: str
@@ -61,6 +63,7 @@ def load_embed_config(
         raise RuntimeError(f"未找到 {p_name} 的 API key（环境变量 {p.get('api_key_env')}）")
     embed_cfg = (cfg.get("embedding") or {}).get(p_name, {})
     return EmbedConfig(
+        provider=p_name,
         api_key=api_key,
         base_url=str(p.get("base_url")),
         model=str(model or embed_cfg.get("model") or DEFAULT_EMBEDDING["model"]),
@@ -123,9 +126,16 @@ def _build_client(cfg: EmbedConfig) -> LlmClient:
     )
 
 
-async def _embed_batch(client: LlmClient, model: str, batch: List[str]) -> List[List[float]]:
+async def _embed_batch(
+    client: LlmClient, provider: str, model: str, batch: List[str]
+) -> List[List[float]]:
     """调一次 embedding。返回与 batch 同序的向量列表。"""
-    resp = await client.embed(model=model, input=batch)
+    resp = await record_api_call_async(
+        api_type="embedding",
+        provider=provider,
+        operation="embed_batch",
+        func=lambda: client.embed(model=model, input=batch),
+    )
     # OpenAI 兼容形态：resp.data: [EmbeddingObject(embedding=..., index=...)]
     data = list(getattr(resp, "data", []) or [])
     data.sort(key=lambda x: getattr(x, "index", 0))
@@ -133,17 +143,17 @@ async def _embed_batch(client: LlmClient, model: str, batch: List[str]) -> List[
 
 
 async def _embed_with_retry(
-    client: LlmClient, model: str, batch: List[str]
+    client: LlmClient, provider: str, model: str, batch: List[str]
 ) -> List[List[float]]:
     """单次 batch 失败时，二分重试以避免单条超长卡死整批。"""
     try:
-        return await _embed_batch(client, model, batch)
+        return await _embed_batch(client, provider, model, batch)
     except Exception as e:
         if len(batch) == 1:
             raise RuntimeError(f"embed 单条失败: {e}; 文本前 80 字: {batch[0][:80]}")
         mid = len(batch) // 2
-        left = await _embed_with_retry(client, model, batch[:mid])
-        right = await _embed_with_retry(client, model, batch[mid:])
+        left = await _embed_with_retry(client, provider, model, batch[:mid])
+        right = await _embed_with_retry(client, provider, model, batch[mid:])
         return left + right
 
 
@@ -186,7 +196,7 @@ def embed_texts(
                         f"{(len(miss_idx) + cfg.batch_size - 1) // cfg.batch_size} "
                         f"(size={len(batch)})"
                     )
-                vecs = await _embed_with_retry(client, cfg.model, batch)
+                vecs = await _embed_with_retry(client, cfg.provider, cfg.model, batch)
                 for i, v in zip(slice_idx, vecs):
                     vectors[i] = v
                     new_pairs.append((keys[i], v))

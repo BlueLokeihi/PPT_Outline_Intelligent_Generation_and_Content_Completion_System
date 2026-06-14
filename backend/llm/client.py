@@ -9,6 +9,8 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from liter_llm import LlmClient
 
+from monitoring import record_api_call_async
+
 
 @dataclass(frozen=True)
 class GenerationDefaults:
@@ -71,16 +73,23 @@ def chat_text_sync(
     temperature: float,
     top_p: float,
     max_tokens: int,
+    provider: str = "",
+    operation: str = "chat",
 ) -> str:
     """同步方式调用 liter-llm 的 chat（内部 asyncio.run）。"""
 
     async def _run() -> str:
-        resp = await client.chat(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            top_p=top_p,
-            max_tokens=max_tokens,
+        resp = await record_api_call_async(
+            api_type="llm",
+            provider=provider or model,
+            operation=operation,
+            func=lambda: client.chat(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
+            ),
         )
         return str(resp.choices[0].message.content or "")
 

@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 from liter_llm import LlmClient
 
 from llm.client import chat_text_sync
+from monitoring import user_facing_error
 from outline.json_extract import extract_first_json_object
 
 
@@ -158,6 +159,7 @@ def rewrite_queries(
     *,
     client: LlmClient,
     model: str,
+    provider: str = "",
     temperature: float = 0.3,
     top_p: float = 0.9,
     max_tokens: int = 512,
@@ -172,9 +174,11 @@ def rewrite_queries(
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
+            provider=provider,
+            operation="rag_query_rewrite",
         )
     except Exception as e:
-        return RewriteResult(queries=[], intent_tags=[], raw_text="", error=str(e))
+        return RewriteResult(queries=[], intent_tags=[], raw_text="", error=user_facing_error(e, api_type="llm"))
     return _parse(raw, max_queries=max_queries)
 
 
@@ -185,6 +189,7 @@ def rewrite_with_feedback(
     *,
     client: LlmClient,
     model: str,
+    provider: str = "",
     temperature: float = 0.5,    # 反馈轮稍高一点，鼓励发散
     top_p: float = 0.9,
     max_tokens: int = 512,
@@ -203,9 +208,11 @@ def rewrite_with_feedback(
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
+            provider=provider,
+            operation="rag_query_rewrite_feedback",
         )
     except Exception as e:
-        return RewriteResult(queries=[], intent_tags=[], raw_text="", error=str(e))
+        return RewriteResult(queries=[], intent_tags=[], raw_text="", error=user_facing_error(e, api_type="llm"))
     return _parse(raw, max_queries=max_queries)
 
 

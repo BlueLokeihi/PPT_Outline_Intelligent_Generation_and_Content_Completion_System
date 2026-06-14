@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from llm.client import build_provider, load_models_config
+from monitoring import monitor, record_api_call, record_api_call_async, user_facing_error
 from outline.evaluation import compute_quality
 from outline.generator import generate_once
 from outline.io_utils import maybe_truncate
@@ -626,6 +627,7 @@ def _process_rag_page(
         embed_cfg=embed_cfg,
         llm_client=llm_client,
         llm_model=llm_model,
+        llm_provider=request.provider,
         mode=request.ragMode,
         k=6,
         recall_k=20,
@@ -676,6 +678,7 @@ def _process_rag_page(
         coverage=coverage,
         client=llm_client,
         model=llm_model,
+        provider=request.provider,
         temperature=0.3,
         max_snippets=request.ragMaxSnippets,
     )
@@ -850,6 +853,16 @@ def api_ping() -> Dict[str, Any]:
     return {"ok": True, "message": "http api is ready"}
 
 
+@app.get("/api/monitoring/usage")
+def api_monitoring_usage() -> Dict[str, Any]:
+    return {"ok": True, "metrics": monitor.snapshot()}
+
+
+@app.post("/api/monitoring/reset")
+def api_monitoring_reset() -> Dict[str, Any]:
+    return {"ok": True, "metrics": monitor.reset()}
+
+
 @app.post("/api/questionnaire")
 async def api_questionnaire(req: QuestionnaireRequest) -> Dict[str, Any]:
     """Generate clarifying questions for a PPT topic using LLM."""
@@ -858,15 +871,20 @@ async def api_questionnaire(req: QuestionnaireRequest) -> Dict[str, Any]:
         client, model, defaults, _ = build_provider(provider, config_path=str(MODELS_CONFIG))
 
         # 直接 await client.chat() — 避免在 uvicorn event loop 中嵌套 asyncio.run()
-        resp = await client.chat(
-            model=model,
-            messages=[
-                {"role": "system", "content": _QUESTIONNAIRE_SYSTEM},
-                {"role": "user", "content": f"用户PPT需求：{req.topic}"},
-            ],
-            temperature=0.3,
-            top_p=defaults.top_p,
-            max_tokens=800,
+        resp = await record_api_call_async(
+            api_type="llm",
+            provider=provider,
+            operation="questionnaire",
+            func=lambda: client.chat(
+                model=model,
+                messages=[
+                    {"role": "system", "content": _QUESTIONNAIRE_SYSTEM},
+                    {"role": "user", "content": f"用户PPT需求：{req.topic}"},
+                ],
+                temperature=0.3,
+                top_p=defaults.top_p,
+                max_tokens=800,
+            ),
         )
         raw = str(resp.choices[0].message.content or "").strip()
 
@@ -880,7 +898,7 @@ async def api_questionnaire(req: QuestionnaireRequest) -> Dict[str, Any]:
                 return {"ok": True, "needs_questionnaire": True, "questions": questions}
         return {"ok": True, "needs_questionnaire": False, "questions": []}
     except Exception as exc:  # noqa: BLE001
-        return {"ok": True, "needs_questionnaire": False, "questions": [], "error": str(exc)}
+        return {"ok": True, "needs_questionnaire": False, "questions": [], "error": user_facing_error(exc, api_type="llm")}
 
 
 def _search_jina(query: str, max_results: int) -> List[Dict[str, str]]:
@@ -951,23 +969,40 @@ async def api_web_search(req: WebSearchRequest) -> Dict[str, Any]:
     def _search() -> Dict[str, Any]:
         # ── 主引擎：Jina ──
         try:
-            results = _search_jina(req.query, req.maxResults)
+            results = record_api_call(
+                api_type="web_search",
+                provider="jina",
+                operation="search",
+                func=lambda: _search_jina(req.query, req.maxResults),
+            )
             if results:
                 return {"ok": True, "results": results, "engine": "jina"}
         except Exception as jina_exc:  # noqa: BLE001
-            jina_err = str(jina_exc)
+            jina_err = user_facing_error(jina_exc, api_type="web_search")
         else:
             jina_err = "Jina 返回空结果"
 
         # ── 兜底：SerpAPI ──
+        serp_err = "SerpAPI 返回空结果"
         try:
-            results = _search_serp(req.query, req.maxResults)
+            results = record_api_call(
+                api_type="web_search",
+                provider="serp",
+                operation="search",
+                func=lambda: _search_serp(req.query, req.maxResults),
+            )
             if results:
                 return {"ok": True, "results": results, "engine": "serp"}
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as serp_exc:  # noqa: BLE001
+            serp_err = user_facing_error(serp_exc, api_type="web_search")
 
-        return {"ok": False, "results": [], "error": "两个搜索引擎均不可用，请稍后重试", "jina_error": jina_err}
+        return {
+            "ok": False,
+            "results": [],
+            "error": "两个搜索引擎均不可用，请稍后重试",
+            "jina_error": jina_err,
+            "serp_error": serp_err,
+        }
 
     try:
         loop = _asyncio.get_event_loop()

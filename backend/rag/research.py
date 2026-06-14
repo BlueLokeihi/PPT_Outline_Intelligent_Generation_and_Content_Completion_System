@@ -92,6 +92,7 @@ def research_page(
     embed_cfg: Optional[EmbedConfig],
     llm_client: Any,
     llm_model: str,
+    llm_provider: str = "",
     mode: str = "hybrid",
     k: int = 6,
     recall_k: int = 20,
@@ -104,7 +105,7 @@ def research_page(
 
     # ---- Round 1 ----------------------------------------------------
     rw1: RewriteResult = rewrite_queries(
-        ctx, client=llm_client, model=llm_model, max_queries=3
+        ctx, client=llm_client, model=llm_model, provider=llm_provider, max_queries=3
     )
     if rw1.error or not rw1.queries:
         return {
@@ -158,6 +159,7 @@ def research_page(
             prev_top_snippets=prev_snippets,
             client=llm_client,
             model=llm_model,
+            provider=llm_provider,
             max_queries=3,
         )
         if rw2.queries:
@@ -284,6 +286,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 embed_cfg=embed_cfg,
                 llm_client=llm_client,
                 llm_model=llm_model,
+                llm_provider=args.rewrite_provider,
                 mode=args.mode,
                 k=args.k,
                 recall_k=args.recall_k,
