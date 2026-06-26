@@ -1,0 +1,491 @@
+{
+  "generated_at": "2026-06-26T12:52:12",
+  "actual_provider": "deepseek",
+  "runs": 20,
+  "passed": 20,
+  "success_rate": 1.0,
+  "max_duration_s": 10.094,
+  "avg_duration_s": 7.587,
+  "rows": [
+    {
+      "idx": 1,
+      "topic": "人工智能发展简史",
+      "status": "PASS",
+      "duration_s": 8.035,
+      "error": "",
+      "details": {
+        "title": "人工智能发展简史",
+        "chapter_count": 4,
+        "page_count": 4,
+        "quality": {
+          "slide_count": 4,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 8.03,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 2,
+      "topic": "AI Agent 在企业办公中的应用",
+      "status": "PASS",
+      "duration_s": 8.771,
+      "error": "",
+      "details": {
+        "title": "AI Agent 在企业办公中的应用",
+        "chapter_count": 4,
+        "page_count": 6,
+        "quality": {
+          "slide_count": 6,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 8.766,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 3,
+      "topic": "生成式 AI 对教育的影响",
+      "status": "PASS",
+      "duration_s": 7.427,
+      "error": "",
+      "details": {
+        "title": "生成式 AI 对教育的影响",
+        "chapter_count": 4,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.403,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 4,
+      "topic": "大模型幻觉问题与治理方法",
+      "status": "PASS",
+      "duration_s": 7.528,
+      "error": "",
+      "details": {
+        "title": "大模型幻觉问题与治理方法",
+        "chapter_count": 4,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.512,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 5,
+      "topic": "RAG 技术原理与应用场景",
+      "status": "PASS",
+      "duration_s": 6.693,
+      "error": "",
+      "details": {
+        "title": "RAG 技术原理与应用场景",
+        "chapter_count": 3,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 6.673,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 6,
+      "topic": "软件项目管理中的风险控制",
+      "status": "PASS",
+      "duration_s": 8.141,
+      "error": "",
+      "details": {
+        "title": "软件项目管理中的风险控制",
+        "chapter_count": 4,
+        "page_count": 6,
+        "quality": {
+          "slide_count": 6,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 8.119,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 7,
+      "topic": "敏捷开发流程介绍",
+      "status": "PASS",
+      "duration_s": 8.093,
+      "error": "",
+      "details": {
+        "title": "敏捷开发流程介绍",
+        "chapter_count": 4,
+        "page_count": 6,
+        "quality": {
+          "slide_count": 6,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 8.076,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 8,
+      "topic": "智能 PPT 大纲生成系统项目汇报",
+      "status": "PASS",
+      "duration_s": 7.568,
+      "error": "",
+      "details": {
+        "title": "智能PPT大纲生成系统项目汇报",
+        "chapter_count": 3,
+        "page_count": 6,
+        "quality": {
+          "slide_count": 6,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.54,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 9,
+      "topic": "多模态人工智能发展趋势",
+      "status": "PASS",
+      "duration_s": 8.328,
+      "error": "",
+      "details": {
+        "title": "多模态人工智能发展趋势",
+        "chapter_count": 4,
+        "page_count": 6,
+        "quality": {
+          "slide_count": 6,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 8.305,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 10,
+      "topic": "知识库问答系统设计",
+      "status": "PASS",
+      "duration_s": 7.776,
+      "error": "",
+      "details": {
+        "title": "知识库问答系统设计",
+        "chapter_count": 3,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.758,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 11,
+      "topic": "云原生部署与 Docker Compose",
+      "status": "PASS",
+      "duration_s": 7.622,
+      "error": "",
+      "details": {
+        "title": "云原生部署与 Docker Compose",
+        "chapter_count": 3,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.615,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 12,
+      "topic": "AI 工具提升学习效率的方法",
+      "status": "PASS",
+      "duration_s": 7.266,
+      "error": "",
+      "details": {
+        "title": "AI 工具提升学习效率的方法",
+        "chapter_count": 4,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.245,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 13,
+      "topic": "企业数字化转型路线图",
+      "status": "PASS",
+      "duration_s": 6.245,
+      "error": "",
+      "details": {
+        "title": "企业数字化转型路线图",
+        "chapter_count": 3,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 6.237,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 14,
+      "topic": "开源大模型与闭源大模型对比",
+      "status": "PASS",
+      "duration_s": 10.094,
+      "error": "",
+      "details": {
+        "title": "开源大模型与闭源大模型对比",
+        "chapter_count": 4,
+        "page_count": 7,
+        "quality": {
+          "slide_count": 7,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 3.71,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 83.33,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 93.33
+        },
+        "elapsedS": 10.088,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 15,
+      "topic": "软件工程课程项目总结",
+      "status": "PASS",
+      "duration_s": 8.482,
+      "error": "",
+      "details": {
+        "title": "软件工程课程项目总结",
+        "chapter_count": 3,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 8.451,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 16,
+      "topic": "提示词工程的基本方法",
+      "status": "PASS",
+      "duration_s": 7.312,
+      "error": "",
+      "details": {
+        "title": "提示词工程的基本方法",
+        "chapter_count": 3,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.289,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 17,
+      "topic": "自动化测试在软件交付中的作用",
+      "status": "PASS",
+      "duration_s": 6.625,
+      "error": "",
+      "details": {
+        "title": "自动化测试在软件交付中的作用",
+        "chapter_count": 3,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 6.598,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 18,
+      "topic": "向量检索与关键词检索对比",
+      "status": "PASS",
+      "duration_s": 6.015,
+      "error": "",
+      "details": {
+        "title": "向量检索与关键词检索对比",
+        "chapter_count": 4,
+        "page_count": 4,
+        "quality": {
+          "slide_count": 4,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 5.999,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 19,
+      "topic": "人工智能安全与伦理",
+      "status": "PASS",
+      "duration_s": 7.444,
+      "error": "",
+      "details": {
+        "title": "人工智能安全与伦理",
+        "chapter_count": 4,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.438,
+        "schemaValid": null
+      }
+    },
+    {
+      "idx": 20,
+      "topic": "高校课程汇报 PPT 设计方法",
+      "status": "PASS",
+      "duration_s": 6.27,
+      "error": "",
+      "details": {
+        "title": "高校课程汇报PPT设计方法",
+        "chapter_count": 3,
+        "page_count": 4,
+        "quality": {
+          "slide_count": 4,
+          "chapter_count": 3,
+          "avg_bullets_per_slide": 4.25,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 6.265,
+        "schemaValid": null
+      }
+    }
+  ]
+}

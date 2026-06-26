@@ -1,0 +1,321 @@
+{
+  "generated_at": "2026-06-26T13:11:19",
+  "label": "docker_deepseek_smoke",
+  "summary": {
+    "PASS": 6
+  },
+  "results": [
+    {
+      "id": "TC-IP-03",
+      "requirement": "Input Processing",
+      "name": "Dynamic questionnaire with DeepSeek",
+      "status": "PASS",
+      "duration_s": 3.073,
+      "details": {
+        "response": {
+          "ok": true,
+          "needs_questionnaire": true,
+          "questions": [
+            {
+              "id": "q1",
+              "question": "核心叙事侧重？",
+              "options": [
+                {
+                  "id": "a",
+                  "label": "技术突破驱动史"
+                },
+                {
+                  "id": "b",
+                  "label": "社会影响与伦理"
+                },
+                {
+                  "id": "c",
+                  "label": "算法演进为主线"
+                }
+              ],
+              "allow_custom": true,
+              "allow_ai_decide": true
+            },
+            {
+              "id": "q2",
+              "question": "案例与数据使用方式？",
+              "options": [
+                {
+                  "id": "a",
+                  "label": "每页嵌入关键数据"
+                },
+                {
+                  "id": "b",
+                  "label": "集中案例对比页"
+                },
+                {
+                  "id": "c",
+                  "label": "仅用经典案例说明"
+                }
+              ],
+              "allow_custom": true,
+              "allow_ai_decide": true
+            },
+            {
+              "id": "q3",
+              "question": "当前挑战侧重？",
+              "options": [
+                {
+                  "id": "a",
+                  "label": "可解释性与安全"
+                },
+                {
+                  "id": "b",
+                  "label": "算力与数据瓶颈"
+                },
+                {
+                  "id": "c",
+                  "label": "伦理与监管困境"
+                }
+              ],
+              "allow_custom": true,
+              "allow_ai_decide": true
+            }
+          ]
+        }
+      },
+      "error": "",
+      "timestamp": "2026-06-26T13:10:05"
+    },
+    {
+      "id": "TC-WEB-01",
+      "requirement": "Input Processing",
+      "name": "Web search source retrieval",
+      "status": "PASS",
+      "duration_s": 17.054,
+      "details": {
+        "response": {
+          "ok": true,
+          "results": [
+            {
+              "title": "人工智能发展简史_中央网络安全和信息化委员会办公室",
+              "url": "https://www.cac.gov.cn/2017-01/23/c_1120366748.htm",
+              "snippet": "## 人工智能发展简史\n\n2017年01月23日 11:10 来源： 网络传播杂志\n\n“人工智能之父” 艾伦·图灵。\n\n**1、 人工智能的诞生（20世纪40～50年代）**\n\n1950年：图灵测试\n\n1950年，著名的图灵测试诞生，按照“人工智能之父”艾伦·图灵的定义：如果一台机器能够与人类展开对话（通过电传设备）而不能被辨别出其机器身份，那么称这台机器具有智能。同一年，图灵还预言会创造出具有真正智能的机器的可能性。\n\n1954年：第一台可编程机器人诞生\n\n1954年美国人…"
+            },
+            {
+              "title": "人工智能史",
+              "url": "https://zh.wikipedia.org/zh-hans/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%E5%8F%B2",
+              "snippet": "**人工智能的历史**源远流长。在古代的[神话](https://zh.wikipedia.org/wiki/%E7%A5%9E%E8%A9%B1 \"神话\")[传说](https://zh.wikipedia.org/wiki/%E4%BC%A0%E8%AF%B4 \"传说\")中，技艺高超的工匠可以制作人造人，并为其赋予智能或意识。[[1]](https://zh.wikipedia.org/zh-hans/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%B…"
+            },
+            {
+              "title": "AMiner - GLM满血模型-AI科研助手",
+              "url": "https://www.aminer.cn/ai-history",
+              "snippet": "AMiner是基于智谱 GLM模型的AI科研助手，收录全球3亿+文献数据、6000万学者。支持学术搜索、关键词搜索、深度调研、AI阅读、AI文库学术问答等。辅助完成包含真实引文的文献综述、开题报告等深度调研报告，更能使用AI高效理解论文等，提升科学研究效率。"
+            }
+          ],
+          "engine": "jina"
+        }
+      },
+      "error": "",
+      "timestamp": "2026-06-26T13:10:22"
+    },
+    {
+      "id": "TC-SO-MODEL-QWEN_SIMULATED_BY_DEEPSEEK",
+      "requirement": "Structured Outline",
+      "name": "Simulated model run (qwen_simulated_by_deepseek, actual provider=deepseek, strategy=baseline)",
+      "status": "PASS",
+      "duration_s": 9.031,
+      "details": {
+        "title": "人工智能发展简史",
+        "chapter_count": 5,
+        "page_count": 6,
+        "quality": {
+          "slide_count": 6,
+          "chapter_count": 5,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 8.997,
+        "schemaValid": null,
+        "rag": null,
+        "model_alias": "qwen_simulated_by_deepseek",
+        "actual_provider": "deepseek",
+        "strategy": "baseline"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T13:10:31"
+    },
+    {
+      "id": "TC-SO-MODEL-DEEPSEEK",
+      "requirement": "Structured Outline",
+      "name": "Simulated model run (deepseek, actual provider=deepseek, strategy=few_shot)",
+      "status": "PASS",
+      "duration_s": 8.03,
+      "details": {
+        "title": "人工智能发展简史",
+        "chapter_count": 4,
+        "page_count": 8,
+        "quality": {
+          "slide_count": 8,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 3.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 7.999,
+        "schemaValid": null,
+        "rag": null,
+        "model_alias": "deepseek",
+        "actual_provider": "deepseek",
+        "strategy": "few_shot"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T13:10:39"
+    },
+    {
+      "id": "TC-SO-MODEL-GLM_SIMULATED_BY_DEEPSEEK",
+      "requirement": "Structured Outline",
+      "name": "Simulated model run (glm_simulated_by_deepseek, actual provider=deepseek, strategy=cot_silent)",
+      "status": "PASS",
+      "duration_s": 8.84,
+      "details": {
+        "title": "人工智能发展简史",
+        "chapter_count": 4,
+        "page_count": 8,
+        "quality": {
+          "slide_count": 8,
+          "chapter_count": 4,
+          "avg_bullets_per_slide": 3.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 100.0,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 100.0
+        },
+        "elapsedS": 8.823,
+        "schemaValid": null,
+        "rag": null,
+        "model_alias": "glm_simulated_by_deepseek",
+        "actual_provider": "deepseek",
+        "strategy": "cot_silent"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T13:10:48"
+    },
+    {
+      "id": "TC-RAG-01",
+      "requirement": "RAG",
+      "name": "DeepSeek outline generation with BM25 RAG",
+      "status": "PASS",
+      "duration_s": 31.643,
+      "details": {
+        "title": "人工智能发展简史",
+        "chapter_count": 5,
+        "page_count": 5,
+        "quality": {
+          "slide_count": 5,
+          "chapter_count": 5,
+          "avg_bullets_per_slide": 4.0,
+          "unique_slide_title_ratio": 1.0,
+          "granularity_score_0_100": 83.33,
+          "hierarchy_score_0_100": 100.0,
+          "coherence_score_0_100": 100.0,
+          "overall_score_0_100": 93.33
+        },
+        "elapsedS": 31.612,
+        "schemaValid": null,
+        "rag": {
+          "used": true,
+          "corpus": "development_of_AI",
+          "mode": "bm25",
+          "embedding_model": "text-embedding-v3",
+          "index_size": 120,
+          "rewrite_threshold": 0.45,
+          "max_rounds": 1,
+          "concurrency": 1,
+          "page_meta": [
+            {
+              "chapter_idx": 0,
+              "page_idx": 0,
+              "page_title": "AI的诞生与早期愿景",
+              "enrichment": "ok",
+              "coverage": 2.0662,
+              "confidence": "high",
+              "used_source_ids": [
+                1,
+                2
+              ],
+              "n_evidences": 2,
+              "conflicts": []
+            },
+            {
+              "chapter_idx": 1,
+              "page_idx": 0,
+              "page_title": "第一次繁荣与低谷",
+              "enrichment": "ok",
+              "coverage": 1.0938,
+              "confidence": "high",
+              "used_source_ids": [
+                1,
+                2
+              ],
+              "n_evidences": 2,
+              "conflicts": []
+            },
+            {
+              "chapter_idx": 2,
+              "page_idx": 0,
+              "page_title": "统计学习与数据驱动",
+              "enrichment": "ok",
+              "coverage": 1.3241,
+              "confidence": "high",
+              "used_source_ids": [
+                1,
+                2
+              ],
+              "n_evidences": 2,
+              "conflicts": []
+            },
+            {
+              "chapter_idx": 3,
+              "page_idx": 0,
+              "page_title": "关键技术与应用爆发",
+              "enrichment": "ok",
+              "coverage": 1.5449,
+              "confidence": "high",
+              "used_source_ids": [
+                1,
+                2,
+                3,
+                4
+              ],
+              "n_evidences": 4,
+              "conflicts": []
+            },
+            {
+              "chapter_idx": 4,
+              "page_idx": 0,
+              "page_title": "瓶颈与伦理问题",
+              "enrichment": "ok",
+              "coverage": 2.4528,
+              "confidence": "high",
+              "used_source_ids": [
+                1,
+                2,
+                3,
+                4
+              ],
+              "n_evidences": 4,
+              "conflicts": []
+            }
+          ],
+          "elapsed_s": 23.147
+        }
+      },
+      "error": "",
+      "timestamp": "2026-06-26T13:11:19"
+    }
+  ]
+}

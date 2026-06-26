@@ -1,0 +1,281 @@
+{
+  "generated_at": "2026-06-26T12:41:23",
+  "label": "local_api",
+  "summary": {
+    "PASS": 16
+  },
+  "results": [
+    {
+      "id": "TC-ENV-01",
+      "requirement": "Engineering",
+      "name": "Backend imports and FastAPI app loads",
+      "status": "PASS",
+      "duration_s": 0.0,
+      "details": {
+        "routes": 25,
+        "env_file": "F:\\PPT_Outline_Intelligent_Generation_and_Content_Completion_System\\backend\\.env",
+        "base_url": "http://127.0.0.1:18080"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-API-01",
+      "requirement": "Engineering",
+      "name": "Ping endpoint",
+      "status": "PASS",
+      "duration_s": 0.003,
+      "details": {
+        "ok": true,
+        "message": "http api is ready"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-API-02",
+      "requirement": "Engineering",
+      "name": "Runtime info endpoint",
+      "status": "PASS",
+      "duration_s": 0.014,
+      "details": {
+        "ok": true,
+        "providers": [
+          "qwen",
+          "deepseek",
+          "glm"
+        ],
+        "strategies": [
+          "baseline",
+          "few_shot",
+          "cot_silent"
+        ]
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-SO-01",
+      "requirement": "Structured Outline",
+      "name": "Sample outline conforms to JSON schema",
+      "status": "PASS",
+      "duration_s": 0.001,
+      "details": {
+        "chapter_count": 3
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-QA-02",
+      "requirement": "Quality Assurance",
+      "name": "Quality metrics are computed",
+      "status": "PASS",
+      "duration_s": 0.0,
+      "details": {
+        "slide_count": 6,
+        "chapter_count": 3,
+        "avg_bullets_per_slide": 3.0,
+        "unique_slide_title_ratio": 1.0,
+        "granularity_score_0_100": 100.0,
+        "hierarchy_score_0_100": 100.0,
+        "coherence_score_0_100": 100.0,
+        "overall_score_0_100": 100.0
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-RAG-INDEX-01",
+      "requirement": "RAG",
+      "name": "List built RAG corpora",
+      "status": "PASS",
+      "duration_s": 0.006,
+      "details": {
+        "corpora": [
+          "demo",
+          "development_of_AI",
+          "software-rag"
+        ]
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-RAG-SRC-01",
+      "requirement": "RAG",
+      "name": "List RAG corpus sources",
+      "status": "PASS",
+      "duration_s": 0.026,
+      "details": {
+        "sources": [
+          {
+            "id": "demo",
+            "has_index": true,
+            "file_count": 1
+          },
+          {
+            "id": "development_of_AI",
+            "has_index": true,
+            "file_count": 1
+          },
+          {
+            "id": "software-rag",
+            "has_index": true,
+            "file_count": 6
+          }
+        ]
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-VER-01",
+      "requirement": "Engineering",
+      "name": "Create outline version",
+      "status": "PASS",
+      "duration_s": 0.03,
+      "details": {
+        "conversation_id": "acceptance-3273f913",
+        "version": {
+          "versionId": "20260626_124123_6995aecf",
+          "conversationId": "acceptance-3273f913",
+          "createdAt": "2026-06-26T12:41:23",
+          "sourceType": "edited",
+          "provider": "deepseek",
+          "strategy": "baseline",
+          "schema": "on",
+          "useRag": false,
+          "summary": "Automated acceptance fixture"
+        }
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-VER-02",
+      "requirement": "Engineering",
+      "name": "List outline versions",
+      "status": "PASS",
+      "duration_s": 0.005,
+      "details": {
+        "count": 1,
+        "latest": {
+          "versionId": "20260626_124123_6995aecf",
+          "conversationId": "acceptance-3273f913",
+          "createdAt": "2026-06-26T12:41:23",
+          "sourceType": "edited",
+          "provider": "deepseek",
+          "strategy": "baseline",
+          "schema": "on",
+          "useRag": false,
+          "summary": "Automated acceptance fixture"
+        }
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-VER-03",
+      "requirement": "Engineering",
+      "name": "Restore outline version",
+      "status": "PASS",
+      "duration_s": 0.007,
+      "details": {
+        "restored_version": {
+          "versionId": "20260626_124123_38137f80",
+          "conversationId": "acceptance-3273f913",
+          "createdAt": "2026-06-26T12:41:23",
+          "sourceType": "restored",
+          "provider": "deepseek",
+          "strategy": "baseline",
+          "schema": "on",
+          "useRag": false,
+          "summary": "Restored from 20260626_124123_6995aecf"
+        }
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-EXP-MARKDOWN",
+      "requirement": "Engineering",
+      "name": "Export markdown",
+      "status": "PASS",
+      "duration_s": 0.016,
+      "details": {
+        "format": "markdown",
+        "bytes": 1635,
+        "content_type": "text/markdown; charset=utf-8"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-EXP-HTML",
+      "requirement": "Engineering",
+      "name": "Export html",
+      "status": "PASS",
+      "duration_s": 0.005,
+      "details": {
+        "format": "html",
+        "bytes": 2882,
+        "content_type": "text/html; charset=utf-8"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-EXP-JSON",
+      "requirement": "Engineering",
+      "name": "Export json",
+      "status": "PASS",
+      "duration_s": 0.005,
+      "details": {
+        "format": "json",
+        "bytes": 2936,
+        "content_type": "application/json"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-EXP-PPTX",
+      "requirement": "Engineering",
+      "name": "Export pptx",
+      "status": "PASS",
+      "duration_s": 0.181,
+      "details": {
+        "format": "pptx",
+        "bytes": 47096,
+        "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-IP-02-DOCX",
+      "requirement": "Input Processing",
+      "name": "Extract DOCX text",
+      "status": "PASS",
+      "duration_s": 0.17,
+      "details": {
+        "chars": 31
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    },
+    {
+      "id": "TC-IP-02-PPTX",
+      "requirement": "Input Processing",
+      "name": "Extract PPTX text",
+      "status": "PASS",
+      "duration_s": 0.139,
+      "details": {
+        "chars": 25
+      },
+      "error": "",
+      "timestamp": "2026-06-26T12:41:23"
+    }
+  ]
+}

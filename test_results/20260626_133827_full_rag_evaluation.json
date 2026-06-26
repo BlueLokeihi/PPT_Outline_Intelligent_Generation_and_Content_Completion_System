@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-06-26T13:38:27",
+  "status_code": 200,
+  "response": {
+    "ok": false,
+    "provider": "deepseek",
+    "strategy": "few_shot",
+    "schema": "on",
+    "elapsedS": 0.014,
+    "error": "llm_api_error: error sending request for url (https://api.deepseek.com/chat/completions)"
+  }
+}
