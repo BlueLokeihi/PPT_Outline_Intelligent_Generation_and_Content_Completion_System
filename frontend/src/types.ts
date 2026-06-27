@@ -252,6 +252,30 @@ export interface SaveOutlineResponse {
   error?: string;
 }
 
+export interface OutlineFeedback {
+  feedbackId: string;
+  conversationId?: string;
+  outlineFingerprint: string;
+  outlineTitle: string;
+  score: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface SaveOutlineFeedbackPayload {
+  conversationId?: string;
+  outlineFingerprint: string;
+  outlineTitle: string;
+  score: number;
+  comment: string;
+}
+
+export interface OutlineFeedbackResponse {
+  ok: boolean;
+  feedback?: OutlineFeedback | null;
+  error?: string;
+}
+
 export interface CreateVersionPayload {
   conversationId?: string;
   outline: OutlineResult;

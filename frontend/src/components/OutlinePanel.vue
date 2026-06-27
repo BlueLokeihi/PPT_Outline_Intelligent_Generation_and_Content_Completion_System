@@ -3,12 +3,14 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import {
   createOutlineVersion,
   exportOutline,
+  getOutlineFeedback,
   listOutlineVersions,
   restoreOutlineVersion,
   saveOutline,
+  saveOutlineFeedback,
 } from '@/services/bridge';
 import { useChatStore } from '@/stores/chat';
-import type { ExportFormat, OutlinePage, OutlineResult, OutlineVersionMeta } from '@/types';
+import type { ExportFormat, OutlineFeedback, OutlinePage, OutlineResult, OutlineVersionMeta } from '@/types';
 
 const props = defineProps<{
   outline: OutlineResult | null;
@@ -24,6 +26,12 @@ const exporting = ref<ExportFormat | ''>('');
 const exportMenuOpen = ref(false);
 const saveStatus = ref('');
 const versionStatus = ref('');
+const feedbackOpen = ref(false);
+const feedbackScore = ref(0);
+const feedbackComment = ref('');
+const feedbackSaving = ref(false);
+const feedbackStatus = ref('');
+const savedFeedback = ref<OutlineFeedback | null>(null);
 
 function toggleExportMenu() {
   exportMenuOpen.value = !exportMenuOpen.value;
@@ -69,6 +77,24 @@ const latestMetadata = computed(() => {
 const quality = computed(() => latestMetadata.value?.quality);
 const ragMeta = computed(() => latestMetadata.value?.rag);
 
+const outlineFingerprint = computed(() => {
+  if (!props.outline) return '';
+  const text = JSON.stringify(props.outline);
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `outline-${(hash >>> 0).toString(16).padStart(8, '0')}`;
+});
+
+const canSaveFeedback = computed(
+  () => feedbackScore.value > 0 && feedbackComment.value.trim().length > 0 && !feedbackSaving.value,
+);
+const currentFeedback = computed(() => (
+  savedFeedback.value?.outlineFingerprint === outlineFingerprint.value ? savedFeedback.value : null
+));
+
 const totalPagesCount = computed(() => {
   if (!props.outline) return 0;
   return props.outline.chapters.reduce((sum, ch) => sum + ch.pages.length, 0);
@@ -102,6 +128,7 @@ watch(
       evidenceOpen.value = {};
       isEditing.value = false;
       saveStatus.value = '';
+      resetFeedback();
       return;
     }
     const state: Record<number, boolean> = {};
@@ -111,11 +138,15 @@ watch(
     isEditing.value = false;
     saveStatus.value = '';
     void refreshVersions();
+    void loadFeedback();
   },
   { immediate: true },
 );
 
-watch(() => store.activeSessionId, () => { void refreshVersions(); });
+watch(() => store.activeSessionId, () => {
+  void refreshVersions();
+  void loadFeedback();
+});
 
 function toggle(index: number) { expanded.value[index] = !expanded.value[index]; }
 function toggleEvidence(key: string) { evidenceOpen.value[key] = !evidenceOpen.value[key]; }
@@ -123,6 +154,28 @@ function pageHasEvidence(page: OutlinePage) { return !!page.evidences && page.ev
 function shortText(text: string, n = 220) { return text?.length > n ? text.slice(0, n) + '…' : (text ?? ''); }
 function displayBullet(text: string) { return text === '未命名要点' ? '' : text; }
 function toggleEdit() { if (!props.outline) return; isEditing.value = !isEditing.value; }
+
+function resetFeedback() {
+  feedbackScore.value = 0;
+  feedbackComment.value = '';
+  feedbackStatus.value = '';
+  savedFeedback.value = null;
+  feedbackOpen.value = false;
+}
+
+function selectFeedbackScore(score: number) {
+  feedbackScore.value = score;
+  feedbackStatus.value = '';
+}
+
+function onFeedbackCommentInput() {
+  feedbackStatus.value = '';
+}
+
+function formatFeedbackTime(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('zh-CN', { hour12: false });
+}
 
 function globalPageNum(ci: number, pi: number): number {
   let count = 0;
@@ -138,6 +191,7 @@ function buildAcceptanceReport() {
     elapsedS: latestMetadata.value?.elapsedS,
     rag: ragMeta.value,
     quality: quality.value,
+    manualEvaluation: currentFeedback.value ?? undefined,
     wbsRbsMapping: {
       outlineGeneration: ['WBS 4.1-4.5', 'RBS Req2'],
       ragCompletion: ['WBS 5.1-5.8', 'RBS Req3'],
@@ -146,6 +200,41 @@ function buildAcceptanceReport() {
       exportDelivery: ['WBS 8.3-8.6', 'RBS Req6'],
     },
   };
+}
+
+async function loadFeedback() {
+  feedbackScore.value = 0;
+  feedbackComment.value = '';
+  feedbackStatus.value = '';
+  savedFeedback.value = null;
+  if (!props.outline || !outlineFingerprint.value) return;
+
+  const res = await getOutlineFeedback(store.activeSessionId, outlineFingerprint.value);
+  if (res.ok && res.feedback) {
+    savedFeedback.value = res.feedback;
+    feedbackScore.value = res.feedback.score;
+    feedbackComment.value = res.feedback.comment;
+  }
+}
+
+async function onSaveFeedback() {
+  if (!props.outline || !canSaveFeedback.value) return;
+  feedbackSaving.value = true;
+  feedbackStatus.value = '';
+  const res = await saveOutlineFeedback({
+    conversationId: store.activeSessionId,
+    outlineFingerprint: outlineFingerprint.value,
+    outlineTitle: props.outline.title,
+    score: feedbackScore.value,
+    comment: feedbackComment.value.trim(),
+  });
+  if (res.ok && res.feedback) {
+    savedFeedback.value = res.feedback;
+    feedbackStatus.value = '评价已保存';
+  } else {
+    feedbackStatus.value = res.error ? `保存失败：${res.error}` : '保存失败';
+  }
+  feedbackSaving.value = false;
 }
 
 function downloadBlob(blob: Blob, fileName: string) {
@@ -333,7 +422,61 @@ async function onRestore(versionId: string) {
             <span>层级 {{ quality.hierarchy_score_0_100 }}</span>
             <span>连贯 {{ quality.coherence_score_0_100 }}</span>
           </div>
+          <button
+            type="button"
+            :class="['manual-evaluation__toggle', { 'is-active': feedbackOpen }]"
+            @click="feedbackOpen = !feedbackOpen"
+          >
+            <span>人工评价</span>
+            <strong v-if="currentFeedback">{{ currentFeedback.score }}/5</strong>
+          </button>
         </div>
+
+        <section v-if="feedbackOpen" class="manual-evaluation" aria-label="人工大纲质量评价">
+          <div class="manual-evaluation__head">
+            <div>
+              <h3>人工大纲质量评价</h3>
+              <p>综合检查结构合理性、内容完整性与事实准确性。</p>
+            </div>
+            <span v-if="currentFeedback" class="manual-evaluation__saved">
+              {{ formatFeedbackTime(currentFeedback.createdAt) }} 已记录
+            </span>
+          </div>
+          <div class="manual-evaluation__score-row">
+            <span class="manual-evaluation__label">质量评分</span>
+            <div class="manual-evaluation__scores" role="radiogroup" aria-label="质量评分，满分 5 分">
+              <button
+                v-for="score in 5"
+                :key="score"
+                type="button"
+                role="radio"
+                :aria-checked="feedbackScore === score"
+                :aria-label="`${score} 分`"
+                :class="{ 'is-selected': feedbackScore === score }"
+                @click="selectFeedbackScore(score)"
+              >{{ score }}</button>
+            </div>
+            <span class="manual-evaluation__scale">1 不符合 · 5 完全符合</span>
+          </div>
+          <label class="manual-evaluation__comment">
+            <span>评价备注</span>
+            <textarea
+              v-model="feedbackComment"
+              maxlength="1000"
+              rows="3"
+              placeholder="记录大纲的优点、问题及建议，例如：章节逻辑清晰，但第 3 页数据来源需进一步核验。"
+              @input="onFeedbackCommentInput"
+            />
+          </label>
+          <div class="manual-evaluation__foot">
+            <span :class="['manual-evaluation__status', { 'is-error': feedbackStatus.startsWith('保存失败') }]">
+              {{ feedbackStatus || `${feedbackComment.trim().length}/1000` }}
+            </span>
+            <button type="button" :disabled="!canSaveFeedback" @click="onSaveFeedback">
+              {{ feedbackSaving ? '保存中…' : '保存评价' }}
+            </button>
+          </div>
+        </section>
       </div>
 
       <!-- BODY (scrollable) -->
@@ -912,6 +1055,162 @@ async function onRestore(versionId: string) {
   font-family: var(--f-mono);
   font-size: 11px;
   color: var(--ink-4);
+}
+.manual-evaluation__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 3px 8px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  transition: background .12s, border-color .12s;
+}
+.manual-evaluation__toggle:hover,
+.manual-evaluation__toggle.is-active {
+  background: var(--accent-soft);
+  border-color: var(--accent-stroke);
+  color: var(--accent);
+}
+.manual-evaluation__toggle strong {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+}
+.manual-evaluation {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r);
+  background: var(--paper);
+}
+.manual-evaluation__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.manual-evaluation__head h3 {
+  margin: 0 0 2px;
+  font-family: var(--f-serif);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.manual-evaluation__head p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-4);
+}
+.manual-evaluation__saved {
+  flex-shrink: 0;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  color: var(--accent);
+}
+.manual-evaluation__score-row {
+  display: grid;
+  grid-template-columns: 60px 160px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.manual-evaluation__label,
+.manual-evaluation__comment > span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.manual-evaluation__scores {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: 28px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.manual-evaluation__scores button {
+  border-right: 1px solid var(--rule);
+  background: var(--paper-2);
+  color: var(--ink-3);
+  font-family: var(--f-mono);
+  font-size: 11px;
+}
+.manual-evaluation__scores button:last-child { border-right: 0; }
+.manual-evaluation__scores button:hover { background: var(--paper-3); color: var(--ink); }
+.manual-evaluation__scores button.is-selected {
+  background: var(--ink);
+  color: var(--paper);
+}
+.manual-evaluation__scale {
+  min-width: 0;
+  font-size: 10px;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+.manual-evaluation__comment {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+.manual-evaluation__comment > span { padding-top: 7px; }
+.manual-evaluation__comment textarea {
+  width: 100%;
+  min-height: 64px;
+  max-height: 140px;
+  padding: 7px 9px;
+  resize: vertical;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1.5;
+  outline: none;
+}
+.manual-evaluation__comment textarea:focus {
+  border-color: var(--accent);
+  background: var(--paper);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.manual-evaluation__comment textarea::placeholder { color: var(--ink-5); }
+.manual-evaluation__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+.manual-evaluation__status {
+  flex: 1;
+  text-align: right;
+  font-size: 10px;
+  color: var(--accent);
+}
+.manual-evaluation__status.is-error { color: var(--danger); }
+.manual-evaluation__foot button {
+  min-width: 76px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.manual-evaluation__foot button:hover:not(:disabled) { background: var(--accent); }
+.manual-evaluation__foot button:disabled { opacity: .35; cursor: not-allowed; }
+
+@media (max-width: 620px) {
+  .manual-evaluation__head { flex-direction: column; gap: 4px; }
+  .manual-evaluation__score-row { grid-template-columns: 60px minmax(0, 1fr); }
+  .manual-evaluation__scale { grid-column: 2; }
 }
 
 /* ── BODY ── */

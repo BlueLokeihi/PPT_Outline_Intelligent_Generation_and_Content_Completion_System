@@ -4,8 +4,10 @@ import type {
   QuestionnaireResponse,
   RagCorpusInfo,
   RagCorpusSource,
+  OutlineFeedbackResponse,
   RunOutlinePayload,
   RunOutlineResponse,
+  SaveOutlineFeedbackPayload,
   SaveOutlinePayload,
   SaveOutlineResponse,
   VersionCreateResponse,
@@ -132,6 +134,40 @@ export async function getCorpusSources(): Promise<{ ok: boolean; sources: RagCor
 export async function saveOutline(payload: SaveOutlinePayload): Promise<SaveOutlineResponse> {
   try {
     return await requestJson<SaveOutlineResponse>('/outline/save', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : serviceNotAvailableMessage,
+    };
+  }
+}
+
+export async function getOutlineFeedback(
+  conversationId: string,
+  outlineFingerprint: string,
+): Promise<OutlineFeedbackResponse> {
+  try {
+    const query = new URLSearchParams({ conversationId, outlineFingerprint });
+    return await requestJson<OutlineFeedbackResponse>(`/outline/feedback?${query.toString()}`, {
+      method: 'GET',
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      feedback: null,
+      error: error instanceof Error ? error.message : serviceNotAvailableMessage,
+    };
+  }
+}
+
+export async function saveOutlineFeedback(
+  payload: SaveOutlineFeedbackPayload,
+): Promise<OutlineFeedbackResponse> {
+  try {
+    return await requestJson<OutlineFeedbackResponse>('/outline/feedback', {
       method: 'POST',
       body: JSON.stringify(payload),
     });

@@ -102,6 +102,14 @@ class OutlineSaveRequest(BaseModel):
     outline: OutlineSaveBody
 
 
+class OutlineFeedbackRequest(BaseModel):
+    conversationId: Optional[str] = None
+    outlineFingerprint: str = Field(min_length=1, max_length=128)
+    outlineTitle: str = Field(default="", max_length=300)
+    score: int = Field(ge=1, le=5)
+    comment: str = Field(min_length=1, max_length=2000)
+
+
 class OutlineVersionRequest(BaseModel):
     conversationId: Optional[str] = None
     outline: OutlineSaveBody
@@ -388,6 +396,19 @@ def _format_ts(ts: float) -> str:
 
 def _versions_root(conversation_id: Optional[str]) -> Path:
     return BACKEND_ROOT / "outline" / "versions" / _safe_token(conversation_id)
+
+
+def _feedback_path(conversation_id: Optional[str]) -> Path:
+    return BACKEND_ROOT / "outline" / "feedback" / f"{_safe_token(conversation_id)}.json"
+
+
+def _read_feedback_records(conversation_id: Optional[str]) -> List[Dict[str, Any]]:
+    path = _feedback_path(conversation_id)
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    records = data.get("feedbacks") if isinstance(data, dict) else []
+    return records if isinstance(records, list) else []
 
 
 def _outline_summary(outline: Dict[str, Any]) -> str:
@@ -1314,6 +1335,52 @@ def api_outline_save(request: OutlineSaveRequest) -> Dict[str, Any]:
             "file": filename,
             "relativePath": f"outline/output/{filename}",
         }
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+@app.get("/api/outline/feedback")
+def api_outline_feedback_get(
+    conversationId: Optional[str] = None,
+    outlineFingerprint: Optional[str] = None,
+) -> Dict[str, Any]:
+    try:
+        records = _read_feedback_records(conversationId)
+        if outlineFingerprint:
+            records = [
+                item for item in records
+                if item.get("outlineFingerprint") == outlineFingerprint
+            ]
+        return {"ok": True, "feedback": records[-1] if records else None}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc), "feedback": None}
+
+
+@app.post("/api/outline/feedback")
+def api_outline_feedback_save(request: OutlineFeedbackRequest) -> Dict[str, Any]:
+    try:
+        comment = request.comment.strip()
+        if not comment:
+            return {"ok": False, "error": "评价备注不能为空"}
+
+        record = {
+            "feedbackId": f"{time.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}",
+            "conversationId": request.conversationId or "",
+            "outlineFingerprint": request.outlineFingerprint,
+            "outlineTitle": request.outlineTitle.strip(),
+            "score": request.score,
+            "comment": comment,
+            "createdAt": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        }
+        records = _read_feedback_records(request.conversationId)
+        records.append(record)
+        path = _feedback_path(request.conversationId)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"feedbacks": records[-200:]}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return {"ok": True, "feedback": record}
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc)}
 
